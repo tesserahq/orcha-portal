@@ -7,7 +7,7 @@ import { useApp } from '@/context/AppContext'
 import '@/styles/customs/sidebar.css'
 import { cn } from '@/utils/misc'
 import { Outlet, useLoaderData } from '@remix-run/react'
-import { BookUser, SquareUser, Users2 } from 'lucide-react'
+import { CodeSquare } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function loader() {
@@ -26,19 +26,9 @@ export default function Layout() {
 
   const menuItems: IMenuItemProps[] = [
     {
-      title: 'Contacts',
-      path: `/contacts`,
-      icon: <SquareUser size={18} />,
-    },
-    {
-      title: 'Contact Lists',
-      path: `/contact-lists`,
-      icon: <BookUser size={18} />,
-    },
-    {
-      title: 'Waiting Lists',
-      path: `/waiting-lists`,
-      icon: <Users2 size={18} />,
+      title: 'Sources',
+      path: `/sources`,
+      icon: <CodeSquare size={18} />,
     },
   ]
 
