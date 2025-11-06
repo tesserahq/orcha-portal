@@ -7,7 +7,7 @@ import { useApp } from '@/context/AppContext'
 import '@/styles/customs/sidebar.css'
 import { cn } from '@/utils/misc'
 import { Outlet, useLoaderData } from '@remix-run/react'
-import { CodeSquare } from 'lucide-react'
+import { CalendarCog, CodeSquare } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function loader() {
@@ -29,6 +29,11 @@ export default function Layout() {
       title: 'Sources',
       path: `/sources`,
       icon: <CodeSquare size={18} />,
+    },
+    {
+      title: 'Events',
+      path: '/events',
+      icon: <CalendarCog size={18} />,
     },
   ]
 
