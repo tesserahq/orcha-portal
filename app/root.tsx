@@ -18,6 +18,9 @@ import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 import SpinnerCSS from '@/styles/customs/spinner.css?url'
 import RootCSS from '@/styles/root.css?url'
 import ReactCountryStateCityCSS from 'react-country-state-city/dist/react-country-state-city.css?url'
+import '@xyflow/react/dist/style.css'
+import DayPickerCSS from 'react-day-picker/style.css?url'
+// import ReactFlowCSS from '@xyflow/react/dist/style.css'
 import { ClientHintCheck } from '@/components/misc/ClientHints'
 import { GenericErrorBoundary } from '@/components/misc/ErrorBoundary'
 import { Toaster } from '@/components/ui/sonner'
@@ -31,11 +34,13 @@ import { csrf } from '@/utils/csrf.server'
 import { combineHeaders, getDomainUrl } from '@/utils/misc.server'
 import { getToastSession } from '@/utils/toast.server'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { fab } from '@fortawesome/free-brands-svg-icons'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ProgressBar } from './components/misc/ProgressBar'
 import { AppProvider } from './context/AppContext'
 
-library.add(fab)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+library.add(fas as any)
 
 export const handle = { i18n: ['translation'] }
 
@@ -56,6 +61,7 @@ export const links: LinksFunction = () => {
     { rel: 'stylesheet', href: RootCSS },
     { rel: 'stylesheet', href: SpinnerCSS },
     { rel: 'stylesheet', href: ReactCountryStateCityCSS },
+    { rel: 'stylesheet', href: DayPickerCSS },
   ]
 }
 
