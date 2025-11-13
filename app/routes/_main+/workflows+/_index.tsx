@@ -79,9 +79,8 @@ export default function WorkflowsIndex() {
 
     deleteFetcher.submit(
       {
-        intent: 'delete',
-        workflowId: workflowToDelete.id,
-        token,
+        workflowId: workflowToDelete?.id as string,
+        token: token,
       },
       {
         method: 'POST',
