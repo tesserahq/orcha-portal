@@ -88,6 +88,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     const convertError = JSON.parse(error?.message)
+
     return redirectWithToast('/contact-lists/new', {
       type: 'error',
       title: 'Error',

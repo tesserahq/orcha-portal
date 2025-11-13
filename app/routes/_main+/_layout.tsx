@@ -6,8 +6,8 @@ import SidebarPanelMin from '@/components/misc/Sidebar/SidebarPanelMin'
 import { useApp } from '@/context/AppContext'
 import '@/styles/customs/sidebar.css'
 import { cn } from '@/utils/misc'
-import { Outlet, useLoaderData } from '@remix-run/react'
-import { CalendarCog, CodeSquare } from 'lucide-react'
+import { Outlet, useLoaderData, useLocation, useParams } from '@remix-run/react'
+import { CalendarCog, CodeSquare, Workflow } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function loader() {
@@ -23,6 +23,8 @@ export default function Layout() {
   const [isExpanded, setIsExpanded] = useState(true)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isLoading } = useApp()
+  const params = useParams()
+  const location = useLocation()
 
   const menuItems: IMenuItemProps[] = [
     {
@@ -34,6 +36,11 @@ export default function Layout() {
       title: 'Events',
       path: '/events',
       icon: <CalendarCog size={18} />,
+    },
+    {
+      title: 'Workflows',
+      path: '/workflows',
+      icon: <Workflow size={18} />,
     },
   ]
 
@@ -79,8 +86,17 @@ export default function Layout() {
           setIsExpanded={setIsExpanded}
         />
 
-        <main className="main-content w-full">
-          <div className="mx-auto h-full w-full max-w-screen-2xl">
+        <main
+          className={cn(
+            'main-content w-full',
+            (params.workflow_id || location.pathname === '/workflows/new') && '!p-0',
+          )}>
+          <div
+            className={cn(
+              'mx-auto h-full w-full max-w-screen-2xl',
+              (params.workflow_id || location.pathname === '/workflows/new') &&
+                'max-w-full',
+            )}>
             <Outlet />
           </div>
         </main>
