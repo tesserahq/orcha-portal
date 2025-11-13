@@ -47,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
   } catch (error: any) {
     const convertError = JSON.parse(error?.message || '{}')
 
-    return redirectWithToast('/workflows', {
+    return redirectWithToast('/workflows/new', {
       type: 'error',
       title: 'Error',
       description: `${convertError.status || 500} - ${

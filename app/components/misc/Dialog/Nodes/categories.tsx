@@ -11,22 +11,22 @@ import Separator from '@/components/ui/separator'
 import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi, NodeENVType } from '@/libraries/fetch'
-import { IWorkflowNode, IWorkflowNodeCategory } from '@/types/workflow'
-import { cn } from '@/utils/misc'
+import { IWorkflowNodeCategory } from '@/types/workflow'
 import { IconName } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Node } from '@xyflow/react'
 import {
   ArrowRight,
   BriefcaseBusiness,
-  CheckCircle,
+  ChevronLeft,
   GitBranch,
   Globe2,
   Pencil,
+  PlusSquare,
   Zap,
 } from 'lucide-react'
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { forwardRef, useImperativeHandle, useState } from 'react'
 import { AppPreloader } from '../../AppPreloader'
-import { Node } from '@xyflow/react'
 
 interface FuncProps {
   onOpen: (currentNode?: Node, nodeAddId?: string) => void
@@ -74,7 +74,6 @@ const NodeCategories: React.ForwardRefRenderFunction<FuncProps, IProps> = (
   const [selectedCategory, setSelectedCategory] = useState<IWorkflowNodeCategory | null>(
     null,
   )
-  const [selectedNode, setSelectedNode] = useState<IWorkflowNode | null>(null)
   const [currentNode, setCurrentNode] = useState<Node | null>(null)
   const [nodeAddId, setNodeAddId] = useState<string | null>(null)
   const { token } = useApp()
@@ -103,7 +102,6 @@ const NodeCategories: React.ForwardRefRenderFunction<FuncProps, IProps> = (
       setOpen(false)
       setIsLoading(true)
       setSelectedCategory(null)
-      setSelectedNode(null)
     },
   }))
 
@@ -112,12 +110,6 @@ const NodeCategories: React.ForwardRefRenderFunction<FuncProps, IProps> = (
     setIsLoading(true)
     setSelectedCategory(null)
   }
-
-  useEffect(() => {
-    if (selectedCategory && selectedCategory.nodes?.length === 1) {
-      setSelectedNode(selectedCategory.nodes[0])
-    }
-  }, [selectedCategory])
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -140,15 +132,24 @@ const NodeCategories: React.ForwardRefRenderFunction<FuncProps, IProps> = (
             {selectedCategory ? (
               <div className="flex animate-slide-up flex-col">
                 {selectedCategory.nodes?.map((node, index) => (
-                  <div key={node.id} onClick={() => setSelectedNode(node)}>
-                    <div
-                      className={cn(
-                        'group flex cursor-pointer items-center space-x-3 py-3',
-                        selectedNode?.id === node.id && 'bg-accent',
-                      )}>
+                  <div
+                    key={node.id}
+                    onClick={() => {
+                      const nodeData = {
+                        name: node.name as string,
+                        description: node.description as string,
+                        kind: node.category as string,
+                        settings: {},
+                        icon: node.icon as string,
+                        displayName: node.displayName as string,
+                      }
+
+                      onSave(nodeData, currentNode ?? undefined, nodeAddId ?? undefined)
+                    }}>
+                    <div className="group flex cursor-pointer items-center space-x-3 py-3">
                       <FontAwesomeIcon
                         icon={['fas', node.icon.split(':')[1].toString() as IconName]}
-                        className="text-sm text-muted-foreground transition-colors duration-200 group-hover:text-primary"
+                        className="text-xl text-muted-foreground transition-colors duration-200 group-hover:text-primary"
                       />
                       <div className="flex-1">
                         <h2 className="text-sm font-semibold transition-colors duration-200 group-hover:text-primary">
@@ -158,9 +159,10 @@ const NodeCategories: React.ForwardRefRenderFunction<FuncProps, IProps> = (
                           {node.subtitle}
                         </p>
                       </div>
-                      {selectedNode?.id === node.id && (
-                        <CheckCircle size={20} className="text-primary" />
-                      )}
+                      <PlusSquare
+                        size={18}
+                        className="transition-colors duration-200 group-hover:border-primary group-hover:text-primary"
+                      />
                     </div>
                     {Array.isArray(selectedCategory?.nodes) &&
                       selectedCategory.nodes.length > 1 &&
@@ -222,26 +224,12 @@ const NodeCategories: React.ForwardRefRenderFunction<FuncProps, IProps> = (
         )}
         {selectedCategory && (
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedCategory(null)}>
-              Back
-            </Button>
             <Button
-              onClick={() => {
-                const nodeData = {
-                  name: selectedNode?.name as string,
-                  description: selectedNode?.description as string,
-                  kind: selectedNode?.category as string,
-                  settings: {},
-                  // ui_settings: {
-                  icon: selectedNode?.icon as string,
-                  displayName: selectedNode?.displayName as string,
-                  // },
-                }
-
-                onSave(nodeData, currentNode ?? undefined, nodeAddId ?? undefined)
-              }}
-              disabled={!selectedNode}>
-              Save
+              variant="outline"
+              onClick={() => setSelectedCategory(null)}
+              className="ps-2">
+              <ChevronLeft size={15} />
+              Back
             </Button>
           </DialogFooter>
         )}

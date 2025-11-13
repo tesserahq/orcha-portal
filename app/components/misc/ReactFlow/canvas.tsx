@@ -5,11 +5,12 @@ import NodeBasic from '@/components/misc/ReactFlow/Nodes/basic'
 import NodeIf from '@/components/misc/ReactFlow/Nodes/if'
 import NodeInitial from '@/components/misc/ReactFlow/Nodes/initial'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
 import { INodeInput, IWorkflow } from '@/types/workflow'
+import { cn } from '@/utils/misc'
 import { FetcherWithComponents, useParams } from '@remix-run/react'
 import {
   addEdge,
@@ -24,7 +25,9 @@ import {
   NodeChange,
   ReactFlow,
 } from '@xyflow/react'
+import { FlaskConical } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 interface IProps {
   apiUrl: string
@@ -50,7 +53,7 @@ export default function ReactFlowCanvas({
   const [workflowPayload, setWorkflowPayload] = useState<IWorkflow>({
     name: workflow?.name || 'My Workflow',
     description: workflow?.description || 'My Workflow',
-    is_active: workflow?.is_active || true,
+    is_active: workflow?.is_active || false,
     nodes: workflow?.nodes || [],
   })
   const nodeCategoriesRef = useRef<React.ElementRef<typeof NodeCategories>>(null)
@@ -531,6 +534,12 @@ export default function ReactFlowCanvas({
   }
 
   const onSaveWorkflow = () => {
+    // check if last nodes have node type addIf, its mean we have node if but don't have node after true/false
+    if (nodes[nodes.length - 1].type === 'addIf') {
+      toast.error('You must add node after If node')
+      return
+    }
+
     const payload = {
       ...workflowPayload,
       nodes: nodes
@@ -644,8 +653,8 @@ export default function ReactFlowCanvas({
 
   return (
     <div className="relative h-full w-full">
-      <div className="absolute -top-1 left-0 z-10 flex w-full animate-slide-down items-center justify-between bg-card py-3 pl-4 pr-8">
-        <Input
+      <div className="absolute -top-1 left-0 z-10 flex w-full animate-slide-down items-center justify-between border-b bg-card py-3 pl-4 pr-8">
+        <input
           value={workflowPayload?.name}
           onChange={(e) =>
             setWorkflowPayload({
@@ -654,13 +663,20 @@ export default function ReactFlowCanvas({
             })
           }
           onBlur={() => {}}
-          className="w-auto !min-w-10 border-transparent !text-lg font-semibold"
+          className="w-auto !min-w-20 border-none border-transparent bg-transparent !text-lg font-semibold outline-none focus-visible:outline-0 focus-visible:ring-0"
         />
 
+        <div className="absolute left-[44%] top-10">
+          <Tabs defaultValue="editor">
+            <TabsList>
+              <TabsTrigger value="editor">Editor</TabsTrigger>
+              <TabsTrigger value="execution">Execution</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         <div className="flex items-center gap-2">
-          {!workflowPayload?.is_active && (
-            <span className="text-muted-foreground">Inactive</span>
-          )}
+          <span>{!workflowPayload?.is_active ? 'Inactive' : 'Active'}</span>
           <Switch
             checked={workflowPayload?.is_active}
             onCheckedChange={(value) => {
@@ -670,7 +686,7 @@ export default function ReactFlowCanvas({
               })
             }}
           />
-          {workflowPayload.is_active && <span>Active</span>}
+
           <Button
             onClick={onSaveWorkflow}
             className="ml-3"
@@ -702,6 +718,17 @@ export default function ReactFlowCanvas({
         nodeEnv={nodeEnv}
         onSave={onSaveNode}
       />
+
+      <div
+        className={cn(
+          'absolute bottom-10 left-[44%]',
+          nodes.length === 1 ? 'hidden' : 'block',
+        )}>
+        <Button>
+          <FlaskConical />
+          <span>Execute Workflow</span>
+        </Button>
+      </div>
     </div>
   )
 }
