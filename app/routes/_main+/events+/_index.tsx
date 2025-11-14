@@ -144,7 +144,7 @@ export default function EventsIndex() {
         cell: ({ row }) => {
           const date = row.original.time
 
-          return date && <DatePreview date={date} label="Event Time" />
+          return date && <DatePreview date={date} />
         },
       },
       {
@@ -153,7 +153,7 @@ export default function EventsIndex() {
         size: 180,
         cell: ({ row }) => {
           const date = row.original.created_at
-          return date && <DatePreview date={date} label="Created" />
+          return date && <DatePreview date={date} />
         },
       },
       {
@@ -162,7 +162,7 @@ export default function EventsIndex() {
         size: 180,
         cell: ({ row }) => {
           const date = row.original.updated_at
-          return date && <DatePreview date={date} label="Updated" />
+          return date && <DatePreview date={date} />
         },
       },
     ],

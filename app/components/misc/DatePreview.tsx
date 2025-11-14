@@ -1,28 +1,13 @@
-import { format, formatDistance } from 'date-fns'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
+import { format } from 'date-fns'
 
 interface DatePreviewProps {
   date: string
-  label: string
 }
 
-export default function DatePreview({ date, label }: DatePreviewProps) {
+export default function DatePreview({ date }: DatePreviewProps) {
   return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger>
-          <span className="text-xs text-muted-foreground">
-            {formatDistance(new Date(date), new Date(), {
-              includeSeconds: true,
-            })}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>
-          <span>
-            {label} {format(date, 'PPpp')}
-          </span>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <span className="text-sm text-muted-foreground">
+      {format(new Date(date + 'z'), 'PPpp')}
+    </span>
   )
 }

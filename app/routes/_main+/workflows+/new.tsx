@@ -31,7 +31,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const apiUrl = process.env.API_URL
   const nodeEnv = process.env.NODE_ENV
   const formData = await request.formData()
-  const { token, workflow } = Object.fromEntries(formData)
+  const { token, workflow, isExecution } = Object.fromEntries(formData)
 
   try {
     const response = await fetchApi(`${apiUrl}/workflows`, token as string, nodeEnv, {
@@ -39,7 +39,12 @@ export async function action({ request }: ActionFunctionArgs) {
       body: workflow,
     })
 
-    return redirectWithToast(`/workflows/${response.id}`, {
+    const redirectUrl =
+      isExecution === 'true'
+        ? `/workflows/${response.id}/executions`
+        : `/workflows/${response.id}`
+
+    return redirectWithToast(redirectUrl, {
       type: 'success',
       title: 'Success',
       description: 'Workflow created successfully',

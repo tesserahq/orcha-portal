@@ -185,7 +185,7 @@ export default function SourcesIndex() {
         size: 180,
         cell: ({ row }) => {
           const date = row.original.created_at
-          return <DatePreview date={date + 'z'} label="Created" />
+          return <DatePreview date={date} />
         },
       },
       {
@@ -194,7 +194,7 @@ export default function SourcesIndex() {
         size: 180,
         cell: ({ row }) => {
           const date = row.original.updated_at
-          return <DatePreview date={date + 'z'} label="Updated" />
+          return <DatePreview date={date} />
         },
       },
     ],

@@ -23,6 +23,7 @@ export type NodeBasicData = {
   isHovered: boolean
   icon: string
   displayName: string
+  isExecution: boolean
 }
 
 type NodeBasicProps = Node<NodeBasicData>
@@ -83,22 +84,19 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
 
   return (
     <>
-      <Card
-        className={cn(
-          'group relative overflow-visible rounded-sm shadow-none hover:border-primary hover:bg-accent hover:text-primary',
-          // data.isHovered ? 'border-primary bg-accent text-primary' : '',
-        )}>
-        <div
-          className={cn(
-            'absolute -top-[18px] left-1/2 z-50 flex -translate-x-1/2 text-center !text-[7px] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100',
-            // data.isHovered ? 'opacity-100' : 'opacity-0',
-          )}>
-          <div className="rounded-full bg-destructive p-0.5" onClick={handleDeleteNode}>
-            <Trash2 size={10} className="cursor-pointer text-white" />
+      <Card className="group relative overflow-visible rounded-sm shadow-none hover:border-primary hover:bg-accent hover:text-primary">
+        {!data?.isExecution && (
+          <div className="absolute -top-[18px] left-1/2 z-50 flex -translate-x-1/2 text-center !text-[7px] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <div className="rounded-full bg-destructive p-0.5" onClick={handleDeleteNode}>
+              <Trash2 size={10} className="cursor-pointer text-white" />
+            </div>
           </div>
-        </div>
+        )}
         <CardContent
-          className="cursor-pointer p-2 transition-colors duration-200"
+          className={cn(
+            'cursor-pointer p-2 transition-colors duration-200',
+            data?.isExecution ? 'pointer-events-none' : '',
+          )}
           onClick={handleOpenConfiguration}>
           {data?.icon === 'action_app' ? (
             <Globe2

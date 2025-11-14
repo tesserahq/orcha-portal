@@ -210,7 +210,7 @@ export default function WorkflowsIndex() {
         size: 180,
         cell: ({ row }) => {
           const date = row.original.created_at
-          return date && <DatePreview date={date + 'z'} label="Created" />
+          return date && <DatePreview date={date} />
         },
       },
       {
@@ -219,7 +219,7 @@ export default function WorkflowsIndex() {
         size: 180,
         cell: ({ row }) => {
           const date = row.original.updated_at
-          return date && <DatePreview date={date + 'z'} label="Updated" />
+          return date && <DatePreview date={date} />
         },
       },
     ],

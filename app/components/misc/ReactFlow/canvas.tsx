@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import NodeCategories from '@/components/misc/Dialog/Nodes/categories'
+import NodeCategories from '@/components/misc/Drawer/NodeCategories'
 import NodeAdd from '@/components/misc/ReactFlow/Nodes/add'
 import NodeBasic from '@/components/misc/ReactFlow/Nodes/basic'
 import NodeIf from '@/components/misc/ReactFlow/Nodes/if'
@@ -11,7 +11,12 @@ import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
 import { INodeInput, IWorkflow } from '@/types/workflow'
 import { cn } from '@/utils/misc'
-import { FetcherWithComponents, useParams } from '@remix-run/react'
+import {
+  FetcherWithComponents,
+  useLocation,
+  useNavigate,
+  useParams,
+} from '@remix-run/react'
 import {
   addEdge,
   applyEdgeChanges,
@@ -36,6 +41,7 @@ interface IProps {
   initialEdges: Edge[]
   fetcher: FetcherWithComponents<unknown>
   workflow?: IWorkflow
+  isExecution?: boolean
 }
 
 export default function ReactFlowCanvas({
@@ -45,11 +51,18 @@ export default function ReactFlowCanvas({
   initialEdges,
   workflow,
   fetcher,
+  isExecution,
 }: IProps) {
   const params = useParams()
   const { token } = useApp()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
   const [edges, setEdges] = useState<Edge[]>(initialEdges)
   const [nodes, setNodes] = useState<Node[]>([])
+  const [isExecuting, setIsExecuting] = useState<boolean>(false)
+  const [activeTab, setActiveTab] = useState<'editor' | 'executions'>(
+    pathname.includes('executions') ? 'executions' : 'editor',
+  )
   const [workflowPayload, setWorkflowPayload] = useState<IWorkflow>({
     name: workflow?.name || 'My Workflow',
     description: workflow?.description || 'My Workflow',
@@ -85,22 +98,6 @@ export default function ReactFlowCanvas({
 
     setEdges((edgesSnapshot) => addEdge(customParams, edgesSnapshot))
   }, [])
-
-  // const onNodeMouseEnter: NodeMouseHandler = useCallback((_, node) => {
-  //   setNodes((prevNodes) =>
-  //     prevNodes.map((e) =>
-  //       e.id === node.id ? { ...node, data: { ...node.data, isHovered: true } } : e,
-  //     ),
-  //   )
-  // }, [])
-
-  // const onNodeMouseLeave: NodeMouseHandler = useCallback((_, node) => {
-  //   setNodes((prevNodes) =>
-  //     prevNodes.map((n) =>
-  //       n.id === node.id ? { ...node, data: { ...node.data, isHovered: false } } : n,
-  //     ),
-  //   )
-  // }, [])
 
   const handleOpenAddDialog = useCallback(
     (node?: Node, nodeAddId?: string) =>
@@ -533,7 +530,7 @@ export default function ReactFlowCanvas({
     nodeCategoriesRef.current?.onClose()
   }
 
-  const onSaveWorkflow = () => {
+  const onSaveWorkflow = ({ isExecution }: { isExecution: boolean }) => {
     // check if last nodes have node type addIf, its mean we have node if but don't have node after true/false
     if (nodes[nodes.length - 1].type === 'addIf') {
       toast.error('You must add node after If node')
@@ -574,14 +571,34 @@ export default function ReactFlowCanvas({
         }),
     }
 
+    if (isExecution) {
+      setIsExecuting(true)
+    }
+
     fetcher.submit(
       {
         token: token!,
         workflow: JSON.stringify(payload),
         id: params?.workflow_id || '',
+        isExecution: isExecution,
       },
       { method: params?.workflow_id ? 'PUT' : 'POST' },
     )
+  }
+
+  const onChangeTab = (tab: 'editor' | 'executions') => {
+    setActiveTab(tab)
+
+    if (tab === 'editor') {
+      navigate(`/workflows/${params?.workflow_id}`)
+    } else {
+      navigate(`/workflows/${params?.workflow_id}/executions`)
+    }
+  }
+
+  const onExecuteWorkflow = () => {
+    setIsExecuting(true)
+    navigate(`/workflows/${params?.workflow_id}/executions`)
   }
 
   useEffect(() => {
@@ -630,6 +647,7 @@ export default function ReactFlowCanvas({
             firstNode: node.ui_settings.firstNode,
             icon: node?.ui_settings?.icon,
             displayName: node?.ui_settings?.displayName,
+            isExecution: isExecution,
           },
         }
       })
@@ -656,6 +674,7 @@ export default function ReactFlowCanvas({
       <div className="absolute -top-1 left-0 z-10 flex w-full animate-slide-down items-center justify-between border-b bg-card py-3 pl-4 pr-8">
         <input
           value={workflowPayload?.name}
+          readOnly={isExecution}
           onChange={(e) =>
             setWorkflowPayload({
               ...workflowPayload,
@@ -667,10 +686,14 @@ export default function ReactFlowCanvas({
         />
 
         <div className="absolute left-[44%] top-10">
-          <Tabs defaultValue="editor">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => onChangeTab(value as 'editor' | 'executions')}>
             <TabsList>
               <TabsTrigger value="editor">Editor</TabsTrigger>
-              <TabsTrigger value="execution">Execution</TabsTrigger>
+              <TabsTrigger value="executions" disabled={pathname.includes('new')}>
+                Executions
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -678,6 +701,7 @@ export default function ReactFlowCanvas({
         <div className="flex items-center gap-2">
           <span>{!workflowPayload?.is_active ? 'Inactive' : 'Active'}</span>
           <Switch
+            disabled={isExecution}
             checked={workflowPayload?.is_active}
             onCheckedChange={(value) => {
               setWorkflowPayload({
@@ -688,9 +712,9 @@ export default function ReactFlowCanvas({
           />
 
           <Button
-            onClick={onSaveWorkflow}
+            onClick={() => onSaveWorkflow({ isExecution: false })}
             className="ml-3"
-            disabled={nodes.length <= 1 || fetcher.state === 'submitting'}>
+            disabled={nodes.length <= 1 || fetcher.state === 'submitting' || isExecution}>
             {fetcher.state === 'submitting' ? 'Saving...' : 'Save'}
           </Button>
         </div>
@@ -698,7 +722,7 @@ export default function ReactFlowCanvas({
 
       <ReactFlow
         className="animate-slide-up"
-        nodes={nodes}
+        nodes={isExecution ? nodes.filter((node) => node.type !== 'add') : nodes}
         edges={edges}
         disableKeyboardA11y
         onNodesChange={onNodesChange}
@@ -706,9 +730,8 @@ export default function ReactFlowCanvas({
         onNodesDelete={onNodesDelete}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
-        // edgeTypes={edgeTypes}
         fitView>
-        <Background />
+        {!isExecution && <Background />}
         <Controls />
       </ReactFlow>
 
@@ -722,11 +745,23 @@ export default function ReactFlowCanvas({
       <div
         className={cn(
           'absolute bottom-10 left-[44%]',
-          nodes.length === 1 ? 'hidden' : 'block',
+          nodes.length === 1 || isExecution ? 'hidden' : 'block',
+          fetcher.state === 'submitting' && isExecuting && 'left-[40%]',
         )}>
-        <Button>
+        <Button
+          onClick={() =>
+            params?.workflow_id
+              ? onExecuteWorkflow()
+              : onSaveWorkflow({ isExecution: true })
+          }
+          disabled={fetcher.state === 'submitting'}>
           <FlaskConical />
-          <span>Execute Workflow</span>
+          <span>
+            {/* cek if user on new page and click execute button, show 'Save and Executing Workflow' */}
+            {fetcher.state === 'submitting' && !params?.workflow_id && isExecuting
+              ? 'Save and Executing Workflow'
+              : 'Execute Workflow'}
+          </span>
         </Button>
       </div>
     </div>
