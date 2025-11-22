@@ -89,7 +89,7 @@ export default function EventsIndex() {
                 <Button
                   variant="ghost"
                   className="flex w-full justify-start gap-2"
-                  onClick={() => dialogRef.current?.onOpen(row.original.data)}>
+                  onClick={() => dialogRef.current?.onOpen(row.original.event_data)}>
                   <FileJson size={18} />
                   <span>View Data</span>
                 </Button>
