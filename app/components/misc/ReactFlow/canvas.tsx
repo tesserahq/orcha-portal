@@ -557,7 +557,8 @@ export default function ReactFlowCanvas({
             name: node.data.name,
             description: node.data.description,
             kind: node.data.kind,
-            settings: node.data.settings,
+            parameters: node.data.parameters,
+            properties: node.data.properties,
             ui_settings: {
               icon: node.data.icon, //(node?.data as any)?.ui_settings?.icon as string,
               displayName: node.data.displayName, //(node?.data as any)?.ui_settings?.displayName as string,
@@ -643,11 +644,12 @@ export default function ReactFlowCanvas({
             name: node.name,
             description: node.description,
             kind: node.kind,
-            settings: node.settings,
             firstNode: node.ui_settings.firstNode,
             icon: node?.ui_settings?.icon,
             displayName: node?.ui_settings?.displayName,
             isExecution: isExecution,
+            properties: node.properties,
+            parameters: node.parameters,
           },
         }
       })
