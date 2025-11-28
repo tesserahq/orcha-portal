@@ -146,10 +146,10 @@ const NodeCategoriesDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = 
                         const nodeData = {
                           name: node.name as string,
                           description: node.description as string,
-                          kind: node.category as string,
-                          settings: {},
+                          kind: node.id as string,
                           icon: node.icon as string,
-                          displayName: node.displayName as string,
+                          displayName: node.display_name as string,
+                          properties: node.properties as any,
                         }
 
                         onSave(nodeData, currentNode ?? undefined, nodeAddId ?? undefined)
@@ -161,7 +161,7 @@ const NodeCategoriesDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = 
                         />
                         <div className="flex-1">
                           <h2 className="text-sm font-semibold transition-colors duration-200 group-hover:text-primary">
-                            {node.displayName}
+                            {node.display_name}
                           </h2>
                           <p className="text-xs text-muted-foreground transition-colors duration-200 group-hover:text-primary">
                             {node.subtitle}

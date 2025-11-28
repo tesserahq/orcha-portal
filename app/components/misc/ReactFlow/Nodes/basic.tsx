@@ -14,7 +14,9 @@ import {
 } from '@xyflow/react'
 import { Globe2, Trash2 } from 'lucide-react'
 import { useCallback, useRef } from 'react'
-import ConfigurationNode, { NodeType } from '@/components/misc/Dialog/Nodes/configuration'
+// import ConfigurationNode from '@/components/misc/ReactFlow/Nodes/configuration'
+import ConfigurationNode from '@/components/misc/Drawer/NodeConfiguration'
+import { INodeProperty } from '@/types/workflow'
 
 export type NodeBasicData = {
   firstNode: boolean
@@ -42,7 +44,6 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
           const incomers = getIncomers(node, remainingNodes, acc)
           const outgoers = getOutgoers(node, remainingNodes, acc)
           const connectedEdges = getConnectedEdges([node], acc)
-
           const remainingEdges = acc.filter((edge) => !connectedEdges.includes(edge))
 
           const createdEdges = incomers.flatMap(({ id: source }) =>
@@ -76,7 +77,7 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
 
     configurationNodeRef.current?.onOpen({
       node: node as Node,
-      nodeType: node?.data.name as NodeType,
+      properties: node?.data.properties as INodeProperty[],
       title: node?.data.displayName as string,
       description: node?.data.description as string,
     })
@@ -119,14 +120,14 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
 
       <ConfigurationNode
         ref={configurationNodeRef}
-        callback={(nodeId, data) => {
+        callback={(nodeId, parameters) => {
           const newNodes = nodes.map((node) => {
             if (node.id === nodeId) {
               return {
                 ...node,
                 data: {
                   ...node.data,
-                  settings: data,
+                  parameters: parameters,
                 },
               }
             }

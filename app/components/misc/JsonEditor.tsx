@@ -1,231 +1,213 @@
-/* eslint-disable no-prototype-builtins */
-import { useEffect, useState } from 'react'
-import { Card, CardContent } from '../ui/card'
-import { Badge } from '../ui/badge'
-import { Input } from '../ui/input'
-import { Button } from '../ui/button'
-import { Check, Edit2, Plus, Trash2, X } from 'lucide-react'
-import Separator from '../ui/separator'
-import { formatString } from '@/utils/format-string'
+import { FileText, CheckCircle2, AlertCircle, Eye } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
-interface Labels {
-  [key: string]: string
+// JSON Editor Component
+// - Left: editable textarea (with basic line numbers)
+// - Top toolbar: Validate, Format, Minify, Copy, Download, Reset
+// - Right: Preview (rendered JSON) + collapsible TreeView
+// - Props: initialValue (object or string), onChange (fn), readOnly (bool)
+
+type JsonValue = string | number | boolean | null | JsonObject | JsonArray
+type JsonObject = { [key: string]: JsonValue }
+type JsonArray = JsonValue[]
+
+type JsonEditorProps = {
+  initialValue?: JsonValue | string
+  onChange?: (parsed: JsonValue) => void
+  readOnly?: boolean
 }
 
-interface IProps {
-  onChange: (val: string) => void
-  currentData: string
-  title: string
-}
+export default function JsonEditor({
+  initialValue,
+  onChange = () => {},
+  readOnly = false,
+}: JsonEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const lineNumbersRef = useRef<HTMLDivElement>(null)
 
-export default function JSONEditor({ onChange, currentData, title }: IProps) {
-  const [labels, setLabels] = useState<Labels>(currentData ? JSON.parse(currentData) : {})
-
-  const [newKey, setNewKey] = useState('')
-  const [newValue, setNewValue] = useState('')
-  const [editingKey, setEditingKey] = useState<string | null>(null)
-  const [editKey, setEditKey] = useState('')
-  const [editValue, setEditValue] = useState('')
-  const [error, setError] = useState('')
-
-  const addLabel = () => {
-    if (!newKey.trim() || !newValue.trim()) {
-      setError('Both key and value are required')
-      return
-    }
-
-    if (labels.hasOwnProperty(newKey)) {
-      setError('Key already exists')
-      return
-    }
-
-    setLabels((prev) => ({ ...prev, [formatString('snake_case', newKey)]: newValue }))
-    setNewKey('')
-    setNewValue('')
-    setError('')
-  }
-
-  const removeLabel = (key: string) => {
-    setLabels((prev) => {
-      const newLabels = { ...prev }
-      delete newLabels[key]
-      return newLabels
-    })
-  }
-
-  const startEdit = (key: string) => {
-    setEditingKey(key)
-    setEditKey(key)
-    setEditValue(labels[key])
-    setError('')
-  }
-
-  const saveEdit = () => {
-    if (!editKey.trim() || !editValue.trim()) {
-      setError('Both key and value are required')
-      return
-    }
-
-    if (editKey !== editingKey && labels.hasOwnProperty(editKey)) {
-      setError('Key already exists')
-      return
-    }
-
-    setLabels((prev) => {
-      const newLabels = { ...prev }
-      if (editKey !== editingKey) {
-        delete newLabels[editingKey!]
-      }
-      newLabels[editKey] = editValue
-      return newLabels
-    })
-
-    setEditingKey(null)
-    setEditKey('')
-    setEditValue('')
-    setError('')
-  }
-
-  const cancelEdit = () => {
-    setEditingKey(null)
-    setEditKey('')
-    setEditValue('')
-    setError('')
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      action()
+  const stringify = (val: JsonValue) => {
+    try {
+      return typeof val === 'string'
+        ? JSON.stringify(JSON.parse(val), null, 2)
+        : JSON.stringify(val, null, 2)
+    } catch (e) {
+      return typeof val === 'string' ? val : JSON.stringify(val)
     }
   }
+
+  const [text, setText] = useState(stringify(initialValue || {}))
+  const [isValid, setIsValid] = useState(true)
+  const [parsed, setParsed] = useState(() => {
+    try {
+      return JSON.parse(stringify(initialValue || {}))
+    } catch (e) {
+      return null
+    }
+  })
 
   useEffect(() => {
-    onChange(JSON.stringify(labels))
-  }, [labels])
+    // inform parent when valid JSON changes
+    if (isValid) onChange(parsed)
+  }, [isValid, parsed])
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const v = e.target.value
+    setText(v)
+    try {
+      const p = JSON.parse(v)
+      setParsed(p)
+      setIsValid(true)
+    } catch (err) {
+      setIsValid(false)
+    }
+  }
+
+  const handleScroll = () => {
+    if (textareaRef.current && lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop
+    }
+  }
+
+  const lineCount = text.split('\n').length
+  const lines = Array.from({ length: lineCount }, (_, i) => i + 1)
+
+  const renderHighlightedJson = (jsonString: string) => {
+    if (!isValid) return null
+
+    const parts: Array<{ text: string; className: string }> = []
+    let lastIndex = 0
+
+    const regex =
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g
+    let match
+
+    while ((match = regex.exec(jsonString)) !== null) {
+      // Add text before match
+      if (match.index > lastIndex) {
+        parts.push({
+          text: jsonString.slice(lastIndex, match.index),
+          className: 'text-foreground',
+        })
+      }
+
+      // Determine color class for the match
+      let className = 'text-blue-600 dark:text-blue-400'
+      if (/^"/.test(match[0])) {
+        if (/:$/.test(match[0])) {
+          className = 'text-purple-600 dark:text-purple-400'
+        } else {
+          className = 'text-green-600 dark:text-green-400'
+        }
+      } else if (/true|false/.test(match[0])) {
+        className = 'text-orange-600 dark:text-orange-400'
+      } else if (/null/.test(match[0])) {
+        className = 'text-gray-500 dark:text-gray-400'
+      }
+
+      parts.push({ text: match[0], className })
+      lastIndex = regex.lastIndex
+    }
+
+    // Add remaining text
+    if (lastIndex < jsonString.length) {
+      parts.push({ text: jsonString.slice(lastIndex), className: 'text-foreground' })
+    }
+
+    return (
+      <>
+        {parts.map((part, index) => (
+          <span key={index} className={part.className}>
+            {part.text}
+          </span>
+        ))}
+      </>
+    )
+  }
 
   return (
-    <Card className="shadow-none">
-      <CardContent className="py-5">
-        {/* Add new label form */}
-        <div className="mb-5">
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input
-                value={newKey}
-                onChange={(e) => setNewKey(e.target.value)}
-                placeholder="Key (e.g., app, version, my_name)"
-                onKeyPress={(e) => handleKeyPress(e, addLabel)}
-              />
+    <div className="flex h-full w-full flex-col gap-4">
+      <div className="flex h-[400px] gap-4">
+        {/* Left - Editor */}
+        <Card className="flex w-1/2 flex-col overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 py-2">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-foreground">Editor</span>
             </div>
-            <span className="text-muted-foreground">:</span>
-            <div className="flex-1">
-              <Input
-                value={newValue}
-                onChange={(e) => setNewValue(e.target.value)}
-                placeholder="Value (e.g., frontend, 1.0.0, production)"
-                onKeyPress={(e) => handleKeyPress(e, addLabel)}
-              />
+            <Badge
+              variant={isValid ? 'default' : 'destructive'}
+              className="flex items-center gap-1">
+              {isValid ? (
+                <>
+                  <CheckCircle2 className="h-3 w-3" />
+                  Valid
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-3 w-3" />
+                  Invalid
+                </>
+              )}
+            </Badge>
+          </CardHeader>
+          <CardContent className="relative flex-1 overflow-hidden rounded-tr-none p-0">
+            <div className="flex h-full">
+              {/* Line Numbers */}
+              <div
+                ref={lineNumbersRef}
+                className="flex-shrink-0 overflow-hidden border-r bg-muted/20 px-3 py-3 text-right font-mono text-xs text-muted-foreground"
+                style={{ width: '50px' }}>
+                {lines.map((line) => (
+                  <div key={line} className="leading-[1.5rem]">
+                    {line}
+                  </div>
+                ))}
+              </div>
+              {/* Textarea */}
+              <div className="relative flex-1 overflow-auto">
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={handleTextChange}
+                  onScroll={handleScroll}
+                  readOnly={readOnly}
+                  spellCheck={false}
+                  className="absolute inset-0 h-full w-full resize-none bg-transparent p-3 font-mono text-sm leading-[1.5rem] text-foreground outline-none selection:bg-primary/20"
+                  style={{ tabSize: 2 }}
+                />
+              </div>
             </div>
-            <Button onClick={addLabel} variant="outline" type="button" size="sm">
-              <Plus />
-              Add
-            </Button>
-          </div>
-          {error && (
-            <div className="mt-2 rounded bg-red-50 p-2 text-sm text-red-600">{error}</div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
 
-        <Separator className="mb-4" />
-
-        {/* Display existing labels */}
-        <div>
-          {Object.keys(labels).length === 0 ? (
-            <div className="py-20 text-center text-muted-foreground">
-              No {title} defined . Add your first {title} above.
+        {/* Right - Preview */}
+        <Card className="flex w-1/2 flex-col overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 py-2">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-foreground">Preview</span>
             </div>
-          ) : (
-            <div className="grid gap-2">
-              {Object.entries(labels).map(([key, value]) => (
-                <Card key={key} className="shadow-none">
-                  <CardContent className="flex items-center justify-between gap-3 p-2">
-                    {editingKey === key ? (
-                      // Edit mode
-                      <div className="flex flex-1 items-center gap-2">
-                        <Input
-                          value={editKey}
-                          onChange={(e) => setEditKey(e.target.value)}
-                          placeholder="Key"
-                          className="flex-1"
-                          onKeyPress={(e) => handleKeyPress(e, saveEdit)}
-                        />
-                        <span className="text-muted-foreground">:</span>
-                        <Input
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          placeholder="Value"
-                          className="flex-1"
-                          onKeyPress={(e) => handleKeyPress(e, saveEdit)}
-                        />
-                      </div>
-                    ) : (
-                      // Display mode
-                      <div className="flex flex-1 items-center gap-2 font-mono text-sm">
-                        <Badge variant="secondary">{key}</Badge>
-                        <span className="text-muted-foreground">:</span>
-                        <span className="text-foreground">{value}</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-1">
-                      {editingKey === key ? (
-                        <>
-                          <Button
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                            onClick={saveEdit}
-                            className="h-8 w-8 p-0">
-                            <Check className="h-4 w-4 text-green-600" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                            onClick={cancelEdit}
-                            className="h-8 w-8 p-0">
-                            <X className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                            onClick={() => startEdit(key)}
-                            className="h-8 w-8 p-0">
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                            onClick={() => removeLabel(key)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <Badge variant="secondary" className="text-xs">
+              {isValid ? 'Formatted' : 'Raw'}
+            </Badge>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-auto rounded-tr-none p-0">
+            <div className="h-full overflow-auto p-3">
+              {isValid ? (
+                <pre className="font-mono text-sm leading-[1.5rem] text-foreground">
+                  {renderHighlightedJson(JSON.stringify(parsed, null, 2))}
+                </pre>
+              ) : (
+                <pre className="font-mono text-sm leading-[1.5rem] text-muted-foreground">
+                  {text || 'Enter JSON to see preview...'}
+                </pre>
+              )}
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }
