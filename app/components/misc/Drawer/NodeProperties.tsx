@@ -31,10 +31,11 @@ interface FuncProps {
 interface IProps {
   callback: (nodeId: string, parameters: any, displayName: string) => void
   onDelete?: (nodeId: string) => void
+  onClose?: () => void
 }
 
-const ConfigurationNode: React.ForwardRefRenderFunction<FuncProps, IProps> = (
-  { callback, onDelete }: IProps,
+const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
+  { callback, onDelete, onClose }: IProps,
   ref,
 ) => {
   const [open, setOpen] = useState<boolean>(false)
@@ -87,6 +88,13 @@ const ConfigurationNode: React.ForwardRefRenderFunction<FuncProps, IProps> = (
     }
   }
 
+  const handleClose = () => {
+    setOpen(false)
+    if (onClose) {
+      onClose()
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -101,7 +109,16 @@ const ConfigurationNode: React.ForwardRefRenderFunction<FuncProps, IProps> = (
               value={displayName}
               autoFocus
               className="mb-1 h-auto w-full border-none p-0 !text-xl font-semibold outline-none focus-visible:bg-white"
-              onChange={(e) => setDisplayName(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.trim() !== '') {
+                  setDisplayName(e.target.value)
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur()
+                }
+              }}
             />
             <p>{nodeData?.description}</p>
           </div>
@@ -119,7 +136,7 @@ const ConfigurationNode: React.ForwardRefRenderFunction<FuncProps, IProps> = (
               variant="ghost"
               size="icon"
               className="h-8 w-8 shrink-0"
-              onClick={() => setOpen(false)}>
+              onClick={handleClose}>
               <X size={18} />
             </Button>
           </div>
@@ -143,7 +160,7 @@ const ConfigurationNode: React.ForwardRefRenderFunction<FuncProps, IProps> = (
 
         {/* Footer */}
         <div className="sticky bottom-0 flex flex-row items-center justify-end gap-2 bg-transparent px-5 py-3 shadow backdrop-blur supports-[backdrop-filter]:bg-white/20">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button
@@ -199,4 +216,4 @@ const ConfigurationNode: React.ForwardRefRenderFunction<FuncProps, IProps> = (
   )
 }
 
-export default forwardRef(ConfigurationNode)
+export default forwardRef(NodePropertyDrawer)

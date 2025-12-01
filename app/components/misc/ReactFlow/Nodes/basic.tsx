@@ -9,7 +9,7 @@ export type NodeBasicData = {
   firstNode: boolean
   name: string
   kind: string
-  isHovered: boolean
+  isSelected: boolean
   icon: string
   displayName: string
   isExecution: boolean
@@ -21,7 +21,10 @@ type NodeBasicProps = Node<NodeBasicData>
 export default function NodeBasic({ data, id }: NodeBasicProps) {
   return (
     <Card
-      className={`group relative overflow-visible rounded-sm border shadow-none hover:border-primary hover:bg-accent hover:text-primary`}>
+      className={cn(
+        `group relative overflow-visible rounded-sm border shadow-none hover:border-primary hover:bg-accent hover:text-primary`,
+        data.isSelected ? 'border-primary bg-accent text-primary' : '',
+      )}>
       <CardContent
         className={cn(
           'cursor-pointer p-2 transition-colors duration-200',
