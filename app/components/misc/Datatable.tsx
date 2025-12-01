@@ -33,16 +33,14 @@ export const TableCellSkeletons = <TData,>({
 }: TableCellSkeletonsProps<TData>) => {
   return Array.from({ length: count }).map((_, skeletonIndex) => {
     return table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
-      <TableRow
-        key={`${headerGroup.id}-${skeletonIndex}`}
-        className="border-border dark:hover:bg-navy-700">
+      <TableRow key={`${headerGroup.id}-${skeletonIndex}`} className="border-border">
         {headerGroup.headers.map((header) => {
           return (
             <TableCell
               key={`${header.id}-${skeletonIndex}`}
-              className="py-2 ps-4 font-semibold text-navy-800 dark:text-navy-100"
+              className="py-2 ps-4 font-semibold"
               style={{ width: header.column.columnDef.size }}>
-              <div className="h-6 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-500"></div>
+              <div className="h-5 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-500"></div>
             </TableCell>
           )
         })}
@@ -129,7 +127,7 @@ export function DataTable<TData, TValue>({
   return (
     <div
       className={cn(
-        'relative flex flex-col overflow-hidden rounded border border-border bg-card',
+        'relative flex flex-col overflow-hidden rounded-md border border-border bg-card',
         fixed && 'h-[calc(100vh-10rem)]',
         hasFilter && 'h-[calc(100vh-13rem)]',
       )}>
@@ -138,14 +136,12 @@ export function DataTable<TData, TValue>({
           <Table>
             <TableHeader className="sticky top-0 z-10 w-full bg-slate-100/20 shadow-sm backdrop-blur-md dark:bg-slate-800/50">
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow
-                  key={headerGroup.id}
-                  className="border-border dark:hover:bg-navy-700">
+                <TableRow key={headerGroup.id} className="border-border">
                   {headerGroup.headers.map((header) => {
                     return (
                       <TableHead
                         key={header.id}
-                        className="py-3 font-semibold text-navy-800 dark:text-navy-100"
+                        className="py-3 font-semibold text-black dark:text-slate-200"
                         style={{ width: header.column.columnDef.size }}>
                         {header.column.columnDef.header ? (
                           header.isPlaceholder ? null : (
@@ -172,11 +168,9 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
-                    className="hover:bg-slate-50 dark:border-border dark:hover:bg-navy-600">
+                    className="hover:bg-slate-50 dark:border-border dark:hover:bg-slate-800">
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="py-2 ps-4 text-navy-800 dark:text-navy-100">
+                      <TableCell key={cell.id} className="py-1 ps-4">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -195,7 +189,7 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
       {meta?.size && (
-        <div className="sticky bottom-0 z-10 border-t border-input bg-card p-3 dark:bg-navy-800">
+        <div className="sticky bottom-0 z-10 border-t border-input bg-card p-3">
           <Pagination meta={meta} />
         </div>
       )}

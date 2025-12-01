@@ -12,7 +12,7 @@ export interface IWorkflow {
 
 export interface IWorkflowNode {
   id: string
-  displayName: string
+  display_name: string
   name: string
   icon: string
   group: string[]
@@ -23,8 +23,9 @@ export interface IWorkflowNode {
   inputs: []
   outputs: []
   requestDefaults: Record<string, unknown>
-  properties: []
+  properties: INodeProperty[]
   category: string
+  icon_color: string
   credentials?: []
 }
 
@@ -39,8 +40,23 @@ export interface INodeInput {
   name: string
   description: string
   kind: string
-  settings: any
   ui_settings: any
+  parameters: any
+  properties: INodeProperty[]
+}
+
+interface IPropertyOption {
+  name: string
+  value: string
+}
+
+export interface INodeProperty {
+  display_name: string
+  name: string
+  type: 'string' | 'options' | 'json'
+  default: string
+  description: string
+  options?: IPropertyOption[]
 }
 
 // export interface IWorkflow {

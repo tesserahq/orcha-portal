@@ -2,8 +2,19 @@
 import ReactFlowCanvas from '@/components/misc/ReactFlow/canvas'
 import { fetchApi } from '@/libraries/fetch'
 import { redirectWithToast } from '@/utils/toast.server'
-import { useFetcher, useLoaderData } from '@remix-run/react'
+import { useBlocker, useFetcher, useLoaderData } from '@remix-run/react'
 import { ActionFunctionArgs } from '@remix-run/router'
+import { useEffect, useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle } from 'lucide-react'
 
 export function loader() {
   const apiUrl = process.env.API_URL
@@ -15,15 +26,94 @@ export function loader() {
 export default function NewWorkflow() {
   const { apiUrl, nodeEnv } = useLoaderData<typeof loader>()
   const fetcher = useFetcher()
+  const [showDialog, setShowDialog] = useState(false)
+  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null)
+
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    return currentLocation.pathname !== nextLocation.pathname
+  })
+
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      setShowDialog(true)
+      setPendingNavigation(() => () => {
+        blocker.proceed()
+        setShowDialog(false)
+        setPendingNavigation(null)
+      })
+    }
+  }, [blocker])
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = '' // required for Chrome
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [])
+
+  const handleCancel = () => {
+    if (blocker.state === 'blocked') {
+      blocker.reset()
+    }
+    setShowDialog(false)
+    setPendingNavigation(null)
+  }
+
+  const handleConfirm = () => {
+    if (pendingNavigation) {
+      pendingNavigation()
+    }
+  }
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      handleCancel()
+    } else {
+      setShowDialog(open)
+    }
+  }
 
   return (
-    <ReactFlowCanvas
-      apiUrl={apiUrl!}
-      nodeEnv={nodeEnv!}
-      initialNodes={[]}
-      initialEdges={[]}
-      fetcher={fetcher}
-    />
+    <>
+      <ReactFlowCanvas
+        apiUrl={apiUrl!}
+        nodeEnv={nodeEnv!}
+        initialNodes={[]}
+        initialEdges={[]}
+        fetcher={fetcher}
+      />
+
+      <Dialog open={showDialog} onOpenChange={handleDialogOpenChange}>
+        <DialogContent className="max-w-md border-t-4 border-t-destructive">
+          <DialogHeader className="flex flex-col items-center">
+            <div className="-mt-16 flex h-16 w-16 items-center justify-center rounded-full bg-destructive p-3 dark:bg-yellow-900">
+              <AlertTriangle className="h-8 w-8 text-white" />
+            </div>
+            <DialogTitle className="!mt-3 text-2xl font-semibold">
+              Leave this page?
+            </DialogTitle>
+            <DialogDescription className="mt-2 text-center">
+              You have unsaved changes. Are you sure you want to leave? Your changes will
+              be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex w-full justify-center gap-2">
+            <Button variant="outline" onClick={handleCancel} className="w-full">
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirm} className="w-full">
+              Leave Page
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

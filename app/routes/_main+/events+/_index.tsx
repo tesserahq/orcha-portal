@@ -72,59 +72,6 @@ export default function EventsIndex() {
   const columns = useMemo<ColumnDef<IEvent>[]>(
     () => [
       {
-        accessorKey: 'id',
-        header: '',
-        size: 5,
-        cell: ({ row }) => {
-          const { id } = row.original
-
-          return (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button size="icon" variant="ghost" className="px-0">
-                  <Ellipsis size={18} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" side="right" className="w-44 p-2">
-                <Button
-                  variant="ghost"
-                  className="flex w-full justify-start gap-2"
-                  onClick={() => dialogRef.current?.onOpen(row.original.event_data)}>
-                  <FileJson size={18} />
-                  <span>View Data</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled
-                  className="hidden w-full justify-start gap-2"
-                  onClick={() => navigate(`/sources/${id}`)}>
-                  <EyeIcon size={18} />
-                  <span>View</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled
-                  className="hidden w-full justify-start gap-2"
-                  onClick={() => {
-                    navigate(`/sources/${id}/edit`)
-                  }}>
-                  <Edit size={18} />
-                  <span>Edit</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled
-                  className="hidden w-full justify-start gap-2 hover:bg-destructive hover:text-destructive-foreground"
-                  onClick={() => {}}>
-                  <Trash2 size={18} />
-                  <span>Delete</span>
-                </Button>
-              </PopoverContent>
-            </Popover>
-          )
-        },
-      },
-      {
         accessorKey: 'event_type',
         header: 'Event Type',
         size: 200,
@@ -165,6 +112,59 @@ export default function EventsIndex() {
           return date && <DatePreview date={date} />
         },
       },
+      {
+        accessorKey: 'id',
+        header: '',
+        size: 5,
+        cell: ({ row }) => {
+          const { id } = row.original
+
+          return (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size="icon" variant="ghost" className="px-0">
+                  <Ellipsis size={18} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="right" className="w-40 p-1">
+                <Button
+                  variant="ghost"
+                  className="flex w-full justify-start gap-2"
+                  onClick={() => dialogRef.current?.onOpen(row.original.event_data)}>
+                  <FileJson size={18} />
+                  <span>View Data</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled
+                  className="hidden w-full justify-start gap-2"
+                  onClick={() => navigate(`/sources/${id}`)}>
+                  <EyeIcon size={18} />
+                  <span>View</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled
+                  className="hidden w-full justify-start gap-2"
+                  onClick={() => {
+                    navigate(`/sources/${id}/edit`)
+                  }}>
+                  <Edit size={18} />
+                  <span>Edit</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled
+                  className="hidden w-full justify-start gap-2 hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => {}}>
+                  <Trash2 size={18} />
+                  <span>Delete</span>
+                </Button>
+              </PopoverContent>
+            </Popover>
+          )
+        },
+      },
     ],
     [],
   )
@@ -174,9 +174,7 @@ export default function EventsIndex() {
   return (
     <div className="animate-slide-up">
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-navy-800 dark:text-navy-100">
-          Events
-        </h1>
+        <h1 className="text-2xl font-semibold">Events</h1>
       </div>
 
       {!isLoading && events?.items?.length === 0 && (

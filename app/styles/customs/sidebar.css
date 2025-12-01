@@ -11,7 +11,7 @@
 }
 
 .sidebar .sidebar-header .brand-name {
-  @apply text-lg font-semibold tracking-wider text-slate-800 dark:text-navy-100;
+  @apply text-lg font-semibold tracking-wider text-slate-800;
 }
 
 .sidebar .sidebar-body {
@@ -23,7 +23,7 @@
 }
 
 .sidebar .sidebar-nav li a {
-  @apply flex cursor-pointer items-center gap-2 space-x-2 px-3 py-2 font-medium tracking-wide text-navy-800 outline-none transition-all dark:text-navy-200;
+  @apply flex cursor-pointer items-center gap-2 space-x-2 border border-transparent px-2 py-1.5 font-medium tracking-wide outline-none transition-all;
 }
 
 .sidebar .sidebar-nav li a:hover,
@@ -35,11 +35,11 @@
 .sidebar .sidebar-nav li a:active,
 .sidebar .sidebar-nav li a.active:hover,
 .sidebar .sidebar-nav li a:active:hover {
-  @apply bg-accent font-semibold text-black dark:bg-accent dark:text-primary;
+  @apply rounded-md border-primary bg-accent text-primary hover:text-black dark:text-primary dark:hover:text-slate-200;
 }
 
 .sidebar-switcher {
-  @apply flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm tracking-wide text-slate-800 outline-none transition-all dark:text-navy-100;
+  @apply flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm tracking-wide text-slate-800 outline-none transition-all;
 }
 
 /* @apply bg-primary/10 dark:hover:bg-primary dark:hover:text-slate-800; */

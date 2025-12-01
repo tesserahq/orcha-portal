@@ -7,7 +7,7 @@ interface DatePreviewProps {
 export default function DatePreview({ date }: DatePreviewProps) {
   return (
     <span className="text-sm text-muted-foreground">
-      {format(new Date(date + 'z'), 'PPpp')}
+      {format(new Date(date + 'z'), 'dd/MM/yyyy')}
     </span>
   )
 }

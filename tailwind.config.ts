@@ -1,23 +1,7 @@
 import type { Config } from 'tailwindcss'
 
-const navyColor = {
-  50: '#e7e9ef',
-  100: '#c2c9d6',
-  200: '#a3adc2',
-  300: '#697a9b',
-  400: '#5c6b8a',
-  450: '#465675',
-  500: '#384766',
-  600: '#313e59',
-  700: '#26334d',
-  750: '#222e45',
-  800: '#202b40',
-  900: '#192132',
-}
-
 const customColors = {
   'dark-secondary': '#2A3040',
-  navy: navyColor,
   'slate-150': '#f2f2f7',
 }
 

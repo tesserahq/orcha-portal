@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import NodeCategories from '@/components/misc/Drawer/NodeCategories'
-import NodeAdd from '@/components/misc/ReactFlow/Nodes/add'
-import NodeBasic from '@/components/misc/ReactFlow/Nodes/basic'
-import NodeIf from '@/components/misc/ReactFlow/Nodes/if'
-import NodeInitial from '@/components/misc/ReactFlow/Nodes/initial'
+import { NodeCategoriesDrawer, NodePropertyDrawer } from '@/components/misc/Drawer'
+import {
+  NodeAdd,
+  NodeBasic,
+  NodeIf,
+  NodeInitial,
+} from '@/components/misc/ReactFlow/Nodes'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -57,6 +59,8 @@ export default function ReactFlowCanvas({
   const { token } = useApp()
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const configurationNodeRef = useRef<React.ElementRef<typeof NodePropertyDrawer>>(null)
+  const nodeCategoriesRef = useRef<React.ElementRef<typeof NodeCategoriesDrawer>>(null)
   const [edges, setEdges] = useState<Edge[]>(initialEdges)
   const [nodes, setNodes] = useState<Node[]>([])
   const [isExecuting, setIsExecuting] = useState<boolean>(false)
@@ -69,7 +73,6 @@ export default function ReactFlowCanvas({
     is_active: workflow?.is_active || false,
     nodes: workflow?.nodes || [],
   })
-  const nodeCategoriesRef = useRef<React.ElementRef<typeof NodeCategories>>(null)
   const nodeTypes = {
     add: NodeAdd as any,
     addIf: NodeAdd as any,
@@ -103,6 +106,44 @@ export default function ReactFlowCanvas({
     (node?: Node, nodeAddId?: string) =>
       nodeCategoriesRef.current?.onOpen(node, nodeAddId),
     [],
+  )
+
+  const convertInitialNodesToReactFlowNodes = useCallback(
+    (nodesToConvert: INodeInput[]): Node[] => {
+      const reactFlowNodes = nodesToConvert.map((node: INodeInput) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { edges, ...uiSettingsWithoutEdges } = node.ui_settings
+
+        return {
+          ...uiSettingsWithoutEdges,
+          data: {
+            name: node.name,
+            description: node.description,
+            kind: node.kind,
+            isExecution: isExecution,
+            properties: node.properties,
+            parameters: node.parameters,
+            firstNode: node.ui_settings.firstNode,
+            icon: node?.ui_settings?.icon,
+            displayName: node?.ui_settings?.displayName,
+            icon_color: node.ui_settings.icon_color,
+          },
+        }
+      })
+
+      const lastNode = reactFlowNodes[reactFlowNodes.length - 1]
+      const addNode: Node = {
+        id: 'add',
+        type: 'add',
+        position: { x: lastNode.position.x + 100, y: 10 },
+        data: {
+          onAddNode: handleOpenAddDialog,
+        },
+      }
+
+      return [...reactFlowNodes, addNode]
+    },
+    [isExecution, handleOpenAddDialog],
   )
 
   const collectNodesForRemoval = useCallback(
@@ -366,7 +407,7 @@ export default function ReactFlowCanvas({
         ? nonInitialNodes.find((nodeItem) => nodeItem.id === placeholderNodeId)
         : undefined
 
-      const isNodeIf = node.name === 'if' && node.kind === 'flow'
+      const isNodeIf = node.name === 'if'
       const defaultX = referenceNode ? referenceNode.position.x + 100 : 0
       const defaultY = referenceNode ? referenceNode.position.y : 0
       const nextPositionY =
@@ -388,6 +429,7 @@ export default function ReactFlowCanvas({
         data: {
           ...(node as INodeInput),
           firstNode: actualFlowNodes.length === 0,
+          isSelected: true,
         },
       }
 
@@ -446,6 +488,12 @@ export default function ReactFlowCanvas({
       if (isNodeIf) {
         return [...nodesWithoutPlaceholder, newWorkflowNode, ...addIfNodes]
       }
+
+      configurationNodeRef.current?.onOpen({
+        node: newWorkflowNode,
+        title: newWorkflowNode?.data.displayName as string,
+        description: node.description,
+      })
 
       return [...nodesWithoutPlaceholder, newWorkflowNode, addNode]
     })
@@ -557,7 +605,8 @@ export default function ReactFlowCanvas({
             name: node.data.name,
             description: node.data.description,
             kind: node.data.kind,
-            settings: node.data.settings,
+            parameters: node.data.parameters,
+            properties: node.data.properties,
             ui_settings: {
               icon: node.data.icon, //(node?.data as any)?.ui_settings?.icon as string,
               displayName: node.data.displayName, //(node?.data as any)?.ui_settings?.displayName as string,
@@ -566,6 +615,7 @@ export default function ReactFlowCanvas({
               type: node.type,
               id: node.id,
               firstNode: node.data.firstNode,
+              icon_color: node.data.icon_color,
             },
           }
         }),
@@ -601,6 +651,79 @@ export default function ReactFlowCanvas({
     navigate(`/workflows/${params?.workflow_id}/executions`)
   }
 
+  const handleNodeClick = useCallback(
+    (_: any, node: Node) => {
+      // state selected node
+      setNodes((prevNodes) =>
+        prevNodes.map((val) => ({
+          ...val,
+          data: { ...val.data, isSelected: val.id === node.id },
+        })),
+      )
+
+      const excludedNodes = ['add', 'addIf', 'initial']
+
+      if (!excludedNodes.includes(node.type as string)) {
+        const selectedNode = nodes.find((val) => val.id === node.id) || node
+
+        // Call custom onOpen callback if provided, passing node data
+        if (node.data?.onOpen && typeof node.data.onOpen === 'function') {
+          node.data.onOpen(node.id, node.data)
+        }
+
+        configurationNodeRef.current?.onOpen({
+          node: selectedNode as Node,
+          title: node?.data.displayName as string,
+          description: node?.data.description as string,
+        })
+      } else {
+        // close configuration node
+        configurationNodeRef.current?.onClose()
+      }
+    },
+    [nodes],
+  )
+
+  const handleNodeUpdate = useCallback(
+    (nodeId: string, parameters: any, displayName: string) => {
+      setNodes((prevNodes) =>
+        prevNodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  parameters,
+                  displayName,
+                  isSelected: false,
+                },
+              }
+            : node,
+        ),
+      )
+    },
+    [],
+  )
+
+  const handleConfigurationClose = useCallback(() => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => ({
+        ...node,
+        data: { ...node.data, isSelected: false },
+      })),
+    )
+  }, [])
+
+  const handleNodeDelete = useCallback(
+    (nodeId: string) => {
+      const nodeToDelete = nodes.find((node) => node.id === nodeId)
+      if (nodeToDelete) {
+        onNodesDelete([nodeToDelete])
+      }
+    },
+    [nodes, onNodesDelete],
+  )
+
   useEffect(() => {
     return () => {
       // reset default when user leave the page
@@ -630,44 +753,10 @@ export default function ReactFlowCanvas({
 
   useEffect(() => {
     if (initialNodes.length > 0) {
-      // nodes to display in reactflow
-      const nodes = initialNodes.map((node: INodeInput) => {
-        // remove edges from nodes
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { edges, ...newNode } = node.ui_settings
-
-        // We need saved all properties from response node api into data, so we can use it again when updating node like line 194
-        return {
-          ...newNode,
-          data: {
-            name: node.name,
-            description: node.description,
-            kind: node.kind,
-            settings: node.settings,
-            firstNode: node.ui_settings.firstNode,
-            icon: node?.ui_settings?.icon,
-            displayName: node?.ui_settings?.displayName,
-            isExecution: isExecution,
-          },
-        }
-      })
-
-      const lastNode = nodes[nodes.length - 1]
-
-      const addNode: Node = {
-        id: 'add',
-        type: 'add',
-        position: { x: lastNode.position.x + 100, y: 10 },
-        data: {
-          onAddNode: handleOpenAddDialog,
-        },
-      }
-
-      nodes.push(addNode)
-
-      setNodes(nodes)
+      const reactFlowNodes = convertInitialNodesToReactFlowNodes(initialNodes)
+      setNodes(reactFlowNodes)
     }
-  }, [initialNodes])
+  }, [initialNodes, convertInitialNodesToReactFlowNodes])
 
   return (
     <div className="relative h-full w-full">
@@ -725,6 +814,7 @@ export default function ReactFlowCanvas({
         nodes={isExecution ? nodes.filter((node) => node.type !== 'add') : nodes}
         edges={edges}
         disableKeyboardA11y
+        onNodeClick={handleNodeClick}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodesDelete={onNodesDelete}
@@ -734,13 +824,6 @@ export default function ReactFlowCanvas({
         {!isExecution && <Background />}
         <Controls />
       </ReactFlow>
-
-      <NodeCategories
-        ref={nodeCategoriesRef}
-        apiUrl={apiUrl!}
-        nodeEnv={nodeEnv}
-        onSave={onSaveNode}
-      />
 
       <div
         className={cn(
@@ -764,6 +847,20 @@ export default function ReactFlowCanvas({
           </span>
         </Button>
       </div>
+
+      <NodeCategoriesDrawer
+        ref={nodeCategoriesRef}
+        apiUrl={apiUrl!}
+        nodeEnv={nodeEnv}
+        onSave={onSaveNode}
+      />
+
+      <NodePropertyDrawer
+        ref={configurationNodeRef}
+        callback={handleNodeUpdate}
+        onClose={handleConfigurationClose}
+        onDelete={handleNodeDelete}
+      />
     </div>
   )
 }
