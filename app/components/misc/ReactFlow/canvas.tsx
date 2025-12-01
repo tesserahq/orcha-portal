@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
 import { INodeInput, IWorkflow } from '@/types/workflow'
+import ConfigurationNode from '@/components/misc/Drawer/NodeConfiguration'
 import { cn } from '@/utils/misc'
 import {
   FetcherWithComponents,
@@ -57,6 +58,8 @@ export default function ReactFlowCanvas({
   const { token } = useApp()
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const configurationNodeRef = useRef<React.ElementRef<typeof ConfigurationNode>>(null)
+  const nodeCategoriesRef = useRef<React.ElementRef<typeof NodeCategories>>(null)
   const [edges, setEdges] = useState<Edge[]>(initialEdges)
   const [nodes, setNodes] = useState<Node[]>([])
   const [isExecuting, setIsExecuting] = useState<boolean>(false)
@@ -69,7 +72,6 @@ export default function ReactFlowCanvas({
     is_active: workflow?.is_active || false,
     nodes: workflow?.nodes || [],
   })
-  const nodeCategoriesRef = useRef<React.ElementRef<typeof NodeCategories>>(null)
   const nodeTypes = {
     add: NodeAdd as any,
     addIf: NodeAdd as any,
@@ -366,7 +368,7 @@ export default function ReactFlowCanvas({
         ? nonInitialNodes.find((nodeItem) => nodeItem.id === placeholderNodeId)
         : undefined
 
-      const isNodeIf = node.name === 'if' && node.kind === 'flow'
+      const isNodeIf = node.name === 'if'
       const defaultX = referenceNode ? referenceNode.position.x + 100 : 0
       const defaultY = referenceNode ? referenceNode.position.y : 0
       const nextPositionY =
@@ -446,6 +448,12 @@ export default function ReactFlowCanvas({
       if (isNodeIf) {
         return [...nodesWithoutPlaceholder, newWorkflowNode, ...addIfNodes]
       }
+
+      configurationNodeRef.current?.onOpen({
+        node: newWorkflowNode,
+        title: newWorkflowNode?.data.displayName as string,
+        description: node.description,
+      })
 
       return [...nodesWithoutPlaceholder, newWorkflowNode, addNode]
     })
@@ -567,6 +575,7 @@ export default function ReactFlowCanvas({
               type: node.type,
               id: node.id,
               firstNode: node.data.firstNode,
+              icon_color: node.data.icon_color,
             },
           }
         }),
@@ -644,12 +653,13 @@ export default function ReactFlowCanvas({
             name: node.name,
             description: node.description,
             kind: node.kind,
-            firstNode: node.ui_settings.firstNode,
-            icon: node?.ui_settings?.icon,
-            displayName: node?.ui_settings?.displayName,
             isExecution: isExecution,
             properties: node.properties,
             parameters: node.parameters,
+            firstNode: node.ui_settings.firstNode,
+            icon: node?.ui_settings?.icon,
+            displayName: node?.ui_settings?.displayName,
+            icon_color: node.ui_settings.icon_color,
           },
         }
       })
@@ -727,6 +737,25 @@ export default function ReactFlowCanvas({
         nodes={isExecution ? nodes.filter((node) => node.type !== 'add') : nodes}
         edges={edges}
         disableKeyboardA11y
+        onNodeClick={(_, node) => {
+          if (node.type !== 'add' && node.type !== 'addIf') {
+            const selectedNode = nodes.find((val) => val.id === node.id) || node
+
+            // Call custom onOpen callback if provided, passing node data
+            if (node.data?.onOpen && typeof node.data.onOpen === 'function') {
+              node.data.onOpen(node.id, node.data)
+            }
+
+            configurationNodeRef.current?.onOpen({
+              node: selectedNode as Node,
+              title: node?.data.displayName as string,
+              description: node?.data.description as string,
+            })
+          } else {
+            // close configuration node
+            configurationNodeRef.current?.onClose()
+          }
+        }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodesDelete={onNodesDelete}
@@ -765,6 +794,35 @@ export default function ReactFlowCanvas({
               : 'Execute Workflow'}
           </span>
         </Button>
+
+        <ConfigurationNode
+          ref={configurationNodeRef}
+          callback={(nodeId, parameters, displayName) => {
+            // console.log('nodeId ', nodeId)
+            // console.log('parameters ', parameters)
+            const newNodes = nodes.map((node) => {
+              if (node.id === nodeId) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    parameters,
+                    displayName,
+                  },
+                }
+              }
+              return node
+            })
+
+            setNodes(newNodes)
+          }}
+          onDelete={(nodeId) => {
+            const nodeToDelete = nodes.find((node) => node.id === nodeId)
+            if (nodeToDelete) {
+              onNodesDelete([nodeToDelete])
+            }
+          }}
+        />
       </div>
     </div>
   )

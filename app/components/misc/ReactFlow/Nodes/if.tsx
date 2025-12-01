@@ -3,6 +3,7 @@ import { IconName } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Position, Handle, Node } from '@xyflow/react'
 import { NodeBasicData } from './basic'
+import { cn } from '@/utils/misc'
 
 type NodeBasicProps = Node<NodeBasicData>
 
@@ -12,7 +13,7 @@ export default function NodeIf({ data, id }: NodeBasicProps) {
       <CardContent className="cursor-pointer p-2 transition-colors duration-200">
         <FontAwesomeIcon
           icon={['fas', data?.icon?.split(':')[1].toString() as IconName]}
-          className="text-muted-foreground group-hover:text-primary"
+          className={cn(`text-${data?.icon_color}-500 group-hover:text-primary`)}
         />
       </CardContent>
       {!data?.firstNode && <Handle type="target" position={Position.Left} id={id} />}

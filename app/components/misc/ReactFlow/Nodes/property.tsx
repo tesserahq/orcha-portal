@@ -45,7 +45,6 @@ export default function NodeProperty({ property, onChange, parameter }: IProps) 
         {property.type === 'string' && (
           <Input
             defaultValue={parameter?.[property.name] || property.default}
-            autoFocus
             onChange={(e) => onChange(property.name, e.target.value)}
             className="bg-card"
           />

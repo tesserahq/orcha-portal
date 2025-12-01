@@ -1,7 +1,8 @@
-import { FileText, CheckCircle2, AlertCircle, Eye } from 'lucide-react'
-import { useEffect, useState, useRef } from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { AlertCircle, CheckCircle2, FileText } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
 // JSON Editor Component
 // - Left: editable textarea (with basic line numbers)
@@ -127,87 +128,95 @@ export default function JsonEditor({
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-4">
-      <div className="flex h-[400px] gap-4">
-        {/* Left - Editor */}
-        <Card className="flex w-1/2 flex-col overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 py-2">
+    <Tabs defaultValue={initialValue ? 'preview' : 'editor'}>
+      <div className="flex min-h-[300px] gap-4">
+        <Card className="flex w-full flex-col overflow-hidden shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 py-1">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-semibold text-foreground">Editor</span>
-            </div>
-            <Badge
-              variant={isValid ? 'default' : 'destructive'}
-              className="flex items-center gap-1">
-              {isValid ? (
-                <>
-                  <CheckCircle2 className="h-3 w-3" />
-                  Valid
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="h-3 w-3" />
-                  Invalid
-                </>
+              <span className="text-sm font-semibold text-foreground">JSON</span>
+              {!isValid && (
+                <Badge
+                  variant={isValid ? 'default' : 'destructive'}
+                  className="flex items-center gap-1">
+                  {isValid ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3" />
+                      Valid
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-3 w-3" />
+                      Invalid
+                    </>
+                  )}
+                </Badge>
               )}
-            </Badge>
+            </div>
+            <TabsList>
+              <TabsTrigger value="editor">Editor</TabsTrigger>
+              <TabsTrigger value="preview" disabled={!isValid}>
+                Preview
+              </TabsTrigger>
+            </TabsList>
           </CardHeader>
-          <CardContent className="relative flex-1 overflow-hidden rounded-tr-none p-0">
-            <div className="flex h-full">
-              {/* Line Numbers */}
-              <div
-                ref={lineNumbersRef}
-                className="flex-shrink-0 overflow-hidden border-r bg-muted/20 px-3 py-3 text-right font-mono text-xs text-muted-foreground"
-                style={{ width: '50px' }}>
-                {lines.map((line) => (
-                  <div key={line} className="leading-[1.5rem]">
-                    {line}
+          <CardContent className="relative flex-1 overflow-auto rounded-tr-none p-0">
+            <TabsContent value="editor">
+              <div className="flex h-full">
+                {/* Line Numbers */}
+                <div
+                  ref={lineNumbersRef}
+                  className="flex-shrink-0 overflow-hidden border-r bg-muted/20 px-3 py-1 text-right font-mono text-xs text-muted-foreground"
+                  style={{ width: '50px' }}>
+                  {lines.map((line) => (
+                    <div key={line} className="leading-[1.5rem]">
+                      {line}
+                    </div>
+                  ))}
+                </div>
+                {/* Textarea */}
+                <div className="relative flex-1 overflow-auto">
+                  <textarea
+                    ref={textareaRef}
+                    value={text}
+                    onChange={handleTextChange}
+                    onScroll={handleScroll}
+                    readOnly={readOnly}
+                    spellCheck={false}
+                    className="absolute inset-0 h-full w-full resize-none bg-transparent px-3 py-1 font-mono text-sm leading-[1.5rem] text-foreground outline-none selection:bg-primary/20"
+                    style={{ tabSize: 2 }}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="preview">
+              <div className="h-full overflow-auto p-0">
+                {isValid ? (
+                  <div className="flex">
+                    <div
+                      ref={lineNumbersRef}
+                      className="flex-shrink-0 overflow-hidden border-r bg-muted/20 px-3 py-1 text-right font-mono text-xs text-muted-foreground"
+                      style={{ width: '50px' }}>
+                      {lines.map((line) => (
+                        <div key={line} className="leading-[1.5rem]">
+                          {line}
+                        </div>
+                      ))}
+                    </div>
+                    <pre className="px-3 py-1 font-mono text-sm leading-[1.5rem] text-foreground">
+                      {renderHighlightedJson(JSON.stringify(parsed, null, 2))}
+                    </pre>
                   </div>
-                ))}
+                ) : (
+                  <pre className="font-mono text-sm leading-[1.5rem] text-muted-foreground">
+                    {text || 'Enter JSON to see preview...'}
+                  </pre>
+                )}
               </div>
-              {/* Textarea */}
-              <div className="relative flex-1 overflow-auto">
-                <textarea
-                  ref={textareaRef}
-                  value={text}
-                  onChange={handleTextChange}
-                  onScroll={handleScroll}
-                  readOnly={readOnly}
-                  spellCheck={false}
-                  className="absolute inset-0 h-full w-full resize-none bg-transparent p-3 font-mono text-sm leading-[1.5rem] text-foreground outline-none selection:bg-primary/20"
-                  style={{ tabSize: 2 }}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Right - Preview */}
-        <Card className="flex w-1/2 flex-col overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 py-2">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-semibold text-foreground">Preview</span>
-            </div>
-            <Badge variant="secondary" className="text-xs">
-              {isValid ? 'Formatted' : 'Raw'}
-            </Badge>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-auto rounded-tr-none p-0">
-            <div className="h-full overflow-auto p-3">
-              {isValid ? (
-                <pre className="font-mono text-sm leading-[1.5rem] text-foreground">
-                  {renderHighlightedJson(JSON.stringify(parsed, null, 2))}
-                </pre>
-              ) : (
-                <pre className="font-mono text-sm leading-[1.5rem] text-muted-foreground">
-                  {text || 'Enter JSON to see preview...'}
-                </pre>
-              )}
-            </div>
+            </TabsContent>
           </CardContent>
         </Card>
       </div>
-    </div>
+    </Tabs>
   )
 }

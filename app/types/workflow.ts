@@ -25,6 +25,7 @@ export interface IWorkflowNode {
   requestDefaults: Record<string, unknown>
   properties: INodeProperty[]
   category: string
+  icon_color: string
   credentials?: []
 }
 
