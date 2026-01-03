@@ -36,7 +36,7 @@
         "cmdk": "^1.1.1",
         "compression": "^1.7.5",
         "cookie": "^1.0.2",
-        "core-ui": "git+https://github.com/estate-buddy-tech/core-ui.git",
+        "core-ui": "git+https://github.com/tesserahq/tessera-ui.git",
         "cronstrue": "^3.3.0",
         "cross-env": "^7.0.3",
         "curl-generator": "^0.4.2",
@@ -880,7 +880,7 @@
 
     "copy-to-clipboard": ["copy-to-clipboard@3.3.3", "", { "dependencies": { "toggle-selection": "^1.0.6" } }, "sha512-2KV8NhB5JqC3ky0r9PMCAZKbUHSwtEo4CwCs0KXgruG43gX5PMqDEBbVU4OUzw2MuAWUfsuFmWvEKG5QRfSnJA=="],
 
-    "core-ui": ["core-ui@github:estate-buddy-tech/core-ui#5239bdd", { "dependencies": { "axios": "^1.10.0" }, "peerDependencies": { "@remix-run/react": "^2.15.3", "class-variance-authority": "^0.7.1", "react": "^18.3.1", "react-dom": "^18.3.1", "tailwindcss": "^4.1.11" } }, "estate-buddy-tech-core-ui-5239bdd"],
+    "core-ui": ["core-ui@github:tesserahq/tessera-ui#5239bdd", { "dependencies": { "axios": "^1.10.0" }, "peerDependencies": { "@remix-run/react": "^2.15.3", "class-variance-authority": "^0.7.1", "react": "^18.3.1", "react-dom": "^18.3.1", "tailwindcss": "^4.1.11" } }, "tesserahq-tessera-ui-5239bdd"],
 
     "core-util-is": ["core-util-is@1.0.3", "", {}, "sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ=="],
 

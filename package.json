@@ -45,7 +45,7 @@
     "cmdk": "^1.1.1",
     "compression": "^1.7.5",
     "cookie": "^1.0.2",
-    "core-ui": "git+https://github.com/estate-buddy-tech/core-ui.git",
+    "core-ui": "git+https://github.com/tesserahq/tessera-ui.git",
     "cronstrue": "^3.3.0",
     "cross-env": "^7.0.3",
     "curl-generator": "^0.4.2",
