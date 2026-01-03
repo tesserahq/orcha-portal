@@ -28,6 +28,11 @@ export default function Layout() {
 
   const menuItems: IMenuItemProps[] = [
     {
+      title: 'Workflows',
+      path: '/workflows',
+      icon: <Workflow size={18} />,
+    },
+    {
       title: 'Sources',
       path: `/sources`,
       icon: <CodeSquare size={18} />,
@@ -36,11 +41,6 @@ export default function Layout() {
       title: 'Events',
       path: '/events',
       icon: <CalendarCog size={18} />,
-    },
-    {
-      title: 'Workflows',
-      path: '/workflows',
-      icon: <Workflow size={18} />,
     },
   ]
 
