@@ -69,7 +69,7 @@ export default function ReactFlowCanvas({
   )
   const [workflowPayload, setWorkflowPayload] = useState<IWorkflow>({
     name: workflow?.name || 'My Workflow',
-    description: workflow?.description || 'My Workflow',
+    description: workflow?.description || '',
     is_active: workflow?.is_active || false,
     nodes: workflow?.nodes || [],
   })

@@ -3,6 +3,7 @@ import type { Config } from 'tailwindcss'
 const customColors = {
   'dark-secondary': '#2A3040',
   'slate-150': '#f2f2f7',
+  'indigo-500': '#6366f1',
 }
 
 const config = {

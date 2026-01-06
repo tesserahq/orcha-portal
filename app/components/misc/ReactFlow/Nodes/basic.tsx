@@ -18,6 +18,31 @@ export type NodeBasicData = {
 
 type NodeBasicProps = Node<NodeBasicData>
 
+const getIconColorClass = (iconColor: string | undefined): string => {
+  const colorMap: Record<string, string> = {
+    red: 'text-red-500',
+    blue: 'text-blue-500',
+    green: 'text-green-500',
+    yellow: 'text-yellow-500',
+    purple: 'text-purple-500',
+    pink: 'text-pink-500',
+    indigo: 'text-indigo-500',
+    orange: 'text-orange-500',
+    teal: 'text-teal-500',
+    cyan: 'text-cyan-500',
+    emerald: 'text-emerald-500',
+    violet: 'text-violet-500',
+    fuchsia: 'text-fuchsia-500',
+    rose: 'text-rose-500',
+    amber: 'text-amber-500',
+    lime: 'text-lime-500',
+    sky: 'text-sky-500',
+  }
+
+  if (!iconColor) return 'text-muted-foreground'
+  return colorMap[iconColor.toLowerCase()] || 'text-muted-foreground'
+}
+
 export default function NodeBasic({ data, id }: NodeBasicProps) {
   return (
     <Card
@@ -38,7 +63,10 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
         ) : (
           <FontAwesomeIcon
             icon={['fas', data?.icon?.split(':')[1].toString() as IconName]}
-            className={cn(`text-${data?.icon_color}-500 group-hover:text-primary`)}
+            className={cn(
+              getIconColorClass(data?.icon_color),
+              'group-hover:text-primary',
+            )}
           />
         )}
       </CardContent>

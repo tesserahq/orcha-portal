@@ -141,6 +141,7 @@ export async function action({ request }: ActionFunctionArgs) {
     })
   } catch (error: any) {
     const convertError = JSON.parse(error?.message || '{}')
+    console.log('convertError ', convertError)
 
     return redirectWithToast('/workflows/new', {
       type: 'error',
