@@ -161,6 +161,7 @@ const NodeCategoriesDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = 
                         displayName: node.display_name as string,
                         properties: node.properties as any,
                         icon_color: node.icon_color as string,
+                        kind: node.id,
                       }
 
                       onSave(nodeData, currentNode ?? undefined, nodeAddId ?? undefined)
