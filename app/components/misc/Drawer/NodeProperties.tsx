@@ -11,11 +11,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { fetchApi, NodeENVType } from '@/libraries/fetch'
 import { INodeProperty } from '@/types/workflow'
 import { cn } from '@/utils/misc'
 import { Node } from '@xyflow/react'
 import { Trash2, X } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useState } from 'react'
+import { useApp } from '@/context/AppContext'
+import { useHandleApiError } from '@/hooks/useHandleApiError'
 
 interface ParamProps {
   node: Node
@@ -29,20 +32,37 @@ interface FuncProps {
 }
 
 interface IProps {
+  apiUrl: string
+  nodeEnv: NodeENVType
   callback: (nodeId: string, parameters: any, displayName: string) => void
   onDelete?: (nodeId: string) => void
   onClose?: () => void
 }
 
 const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
-  { callback, onDelete, onClose }: IProps,
+  { apiUrl, nodeEnv, callback, onDelete, onClose }: IProps,
   ref,
 ) => {
+  const { token } = useApp()
+  const handleApiError = useHandleApiError()
   const [open, setOpen] = useState<boolean>(false)
   const [nodeData, setNodeData] = useState<ParamProps>()
   const [parameters, setParameters] = useState<any>()
   const [displayName, setDisplayName] = useState<string>('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false)
+  const [eventTypes, setEventTypes] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+
+  const fetchEventTypes = async () => {
+    try {
+      const response = await fetchApi(`${apiUrl}/event-types`, token!, nodeEnv)
+      setEventTypes(response.items)
+    } catch (error) {
+      handleApiError(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useImperativeHandle(ref, () => ({
     onOpen(args: ParamProps) {
@@ -50,10 +70,16 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
       setNodeData(args)
       setDisplayName(args.title)
       const properties = args.node.data.properties as INodeProperty[]
+      const parameters = args.node.data.parameters
+
+      // Get list of event types when node data has name event_received
+      if (args.node.data?.name === 'event_received') {
+        fetchEventTypes()
+      }
 
       // Initialize parameters: use existing if available, otherwise create from properties
-      if (args.node.data?.parameters) {
-        setParameters(args.node.data?.parameters)
+      if (parameters) {
+        setParameters(parameters)
       } else if (properties && properties.length > 0) {
         const initialParameters = properties.reduce(
           (acc: any, property: INodeProperty) => {
@@ -70,6 +96,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
 
     onClose() {
       setOpen(false)
+      setIsLoading(true)
     },
   }))
 
@@ -90,6 +117,8 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
 
   const handleClose = () => {
     setOpen(false)
+    setIsLoading(true) // to trigger loading when fetching event-types
+
     if (onClose) {
       onClose()
     }
@@ -152,6 +181,8 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
                   property={property}
                   parameter={parameters}
                   onChange={onChangeParameters}
+                  eventTypes={eventTypes || []}
+                  isLoading={isLoading}
                 />
               )
             },

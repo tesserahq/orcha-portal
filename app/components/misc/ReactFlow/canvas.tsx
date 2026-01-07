@@ -857,6 +857,8 @@ export default function ReactFlowCanvas({
 
       <NodePropertyDrawer
         ref={configurationNodeRef}
+        apiUrl={apiUrl!}
+        nodeEnv={nodeEnv}
         callback={handleNodeUpdate}
         onClose={handleConfigurationClose}
         onDelete={handleNodeDelete}
