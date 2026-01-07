@@ -115,7 +115,7 @@ export default function EventTypeItems({
                     setPopoverOpen(false)
                     setEventType('')
                   }}>
-                  Add "{eventType.trim()}"
+                  Add &quot;{eventType.trim()}&quot;
                 </CommandItem>
               )}
             </CommandGroup>
