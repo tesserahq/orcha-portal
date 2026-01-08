@@ -759,7 +759,7 @@ export default function ReactFlowCanvas({
   }, [initialNodes, convertInitialNodesToReactFlowNodes])
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full bg-stone-100 dark:bg-slate-900">
       <div className="absolute -top-1 left-0 z-10 flex w-full animate-slide-down items-center justify-between border-b bg-card py-3 pl-4 pr-8">
         <input
           value={workflowPayload?.name}
