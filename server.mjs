@@ -1,15 +1,10 @@
-import { createRequestHandler } from '@remix-run/express'
-import { installGlobals } from '@remix-run/node'
+import { createRequestHandler } from '@react-router/express'
 import crypto from 'crypto'
 import express from 'express'
 import compression from 'compression'
 import morgan from 'morgan'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
-
-// Info about Single Fetch and `installGlobals`:
-// https://remix.run/docs/en/main/guides/single-fetch#enabling-single-fetch
-installGlobals({ nativeFetch: true })
 
 const PORT = process.env.PORT || 3000
 const NODE_ENV = process.env.NODE_ENV ?? 'development'
@@ -164,7 +159,7 @@ app.all(
     }),
 
     build: viteDevServer
-      ? () => viteDevServer.ssrLoadModule('virtual:remix/server-build')
+      ? () => viteDevServer.ssrLoadModule('virtual:react-router/server-build')
       : await import('./build/server/index.js'),
   }),
 )

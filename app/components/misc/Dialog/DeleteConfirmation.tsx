@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@shadcn/ui/button'
 import {
   Dialog,
   DialogClose,
@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { cn } from '@/utils/misc'
-import { FetcherWithComponents } from '@remix-run/react'
+} from '@shadcn/ui/dialog'
+import { Input } from '@shadcn/ui/input'
+import { cn } from '@shadcn/lib/utils'
+import { FetcherWithComponents } from 'react-router'
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -46,7 +46,9 @@ export default function DeleteConfirmation({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md border-t-4 border-t-destructive">
         <DialogHeader className="flex flex-col items-center">
-          <div className="-mt-16 flex h-16 w-16 items-center justify-center rounded-full bg-destructive p-3">
+          <div
+            className="-mt-16 flex h-16 w-16 items-center justify-center rounded-full bg-destructive
+              p-3">
             <Trash2 size={100} className="text-white" />
           </div>
           <DialogTitle className="hidden"></DialogTitle>
@@ -59,7 +61,7 @@ export default function DeleteConfirmation({
             <p
               className={cn(
                 'mt-3 text-center text-lg text-black dark:text-secondary-foreground',
-                !showInputValidation && 'mb-3 text-base text-secondary-foreground',
+                !showInputValidation && 'mb-3 text-base text-secondary-foreground'
               )}>
               {description}
             </p>

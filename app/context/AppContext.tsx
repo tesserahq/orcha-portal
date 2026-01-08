@@ -3,7 +3,7 @@ import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi, NodeENVType } from '@/libraries/fetch'
 import { IUser } from '@/types/user'
 import { useAuth0 } from '@auth0/auth0-react'
-import { useNavigate } from '@remix-run/react'
+import { useNavigate } from 'react-router'
 import React, { useEffect, useState } from 'react'
 
 export interface IContextProps {
@@ -61,7 +61,7 @@ export function AppProvider({ children, identiesApiUrl, nodeEnv }: IProviderProp
       user: user || null,
       isLoading: loadingAuth0,
     }),
-    [user, token],
+    [user, token]
   )
 
   return <AppContext.Provider value={contextPayload}>{children}</AppContext.Provider>
