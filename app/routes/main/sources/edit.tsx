@@ -60,7 +60,7 @@ export default function SourcesEdit() {
     const formData = new FormData()
     formData.append('token', token!)
     formData.append('name', values.name)
-    formData.append('identifier', values.identifier)
+    formData.append('identifier', values.identifier || '')
     if (values.description) {
       formData.append('description', values.description)
     }
