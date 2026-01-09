@@ -1,5 +1,5 @@
 import { Auth0Provider } from '@auth0/auth0-react'
-import type { LinksFunction, LoaderFunctionArgs, TypedResponse } from '@remix-run/node'
+import type { LinksFunction, LoaderFunctionArgs } from 'react-router'
 import {
   data,
   Links,
@@ -9,21 +9,20 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
-} from '@remix-run/react'
-import { useChangeLanguage } from 'remix-i18next/react'
+} from 'react-router'
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 
 // Import global CSS styles for the application
 // The ?url query parameter tells the bundler to handle this as a URL import
-import SpinnerCSS from '@/styles/customs/spinner.css?url'
+import SpinnerCSS from '@/styles/spinner.css?url'
 import RootCSS from '@/styles/root.css?url'
 import ReactCountryStateCityCSS from 'react-country-state-city/dist/react-country-state-city.css?url'
 import '@xyflow/react/dist/style.css'
 import DayPickerCSS from 'react-day-picker/style.css?url'
 // import ReactFlowCSS from '@xyflow/react/dist/style.css'
-import { ClientHintCheck } from '@/components/misc/ClientHints'
-import { GenericErrorBoundary } from '@/components/misc/ErrorBoundary'
-import { Toaster } from '@/components/ui/sonner'
+import { ClientHintCheck } from '@/components/client-hints/client-hints'
+import { GenericErrorBoundary } from '@/components/error-boundary/error-boundary'
+import { Toaster } from '@shadcn/ui/sonner'
 import { SITE_CONFIG } from '@/constants/brand'
 import { getHints } from '@/hooks/useHints'
 import { useNonce } from '@/hooks/useNonce'
@@ -36,13 +35,12 @@ import { getToastSession } from '@/utils/toast.server'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { ProgressBar } from './components/misc/ProgressBar'
+import { ProgressBar } from './components/loader/progress-bar'
 import { AppProvider } from './context/AppContext'
+import { ReactQueryProvider } from './modules/react-query'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 library.add(fas as any)
-
-export const handle = { i18n: ['translation'] }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
@@ -65,15 +63,11 @@ export const links: LinksFunction = () => {
   ]
 }
 
-export type LoaderData = Exclude<
-  Awaited<ReturnType<typeof loader>>,
-  Response | TypedResponse<unknown>
->
+export type LoaderData = Exclude<Awaited<ReturnType<typeof loader>>, Response>
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = null
 
-  const locale = await i18nServer.getLocale(request)
   const { toast, headers: toastHeaders } = await getToastSession(request)
   const [csrfToken, csrfCookieHeader] = await csrf.commitToken()
   const clientID = process.env.AUTH0_CLIENT_ID
@@ -90,7 +84,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       identiesApiUrl,
       nodeEnv,
       user,
-      locale,
       toast,
       csrfToken,
       clientID,
@@ -106,30 +99,27 @@ export async function loader({ request }: LoaderFunctionArgs) {
     } as const,
     {
       headers: combineHeaders(
-        { 'Set-Cookie': await localeCookie.serialize(locale) },
         toastHeaders,
-        csrfCookieHeader ? { 'Set-Cookie': csrfCookieHeader } : null,
+        csrfCookieHeader ? { 'Set-Cookie': csrfCookieHeader } : null
       ),
-    },
+    }
   )
 }
 
 function Document({
   children,
   nonce,
-  lang = 'en',
   dir = 'ltr',
   theme = 'light',
 }: {
   children: React.ReactNode
   nonce: string
-  lang?: string
   dir?: 'ltr' | 'rtl'
   theme?: Theme
 }) {
   return (
     <html
-      lang={lang}
+      lang="en"
       dir={dir}
       className={`${theme} overflow-x-hidden`}
       style={{ colorScheme: theme }}>
@@ -157,7 +147,6 @@ function Document({
 
 export default function AppWithProviders() {
   const {
-    locale,
     toast,
     csrfToken,
     clientID,
@@ -172,13 +161,11 @@ export default function AppWithProviders() {
   const nonce = useNonce()
   const theme = useTheme()
 
-  useChangeLanguage(locale)
-
   // Renders toast (if any).
   useToast(toast)
 
   return (
-    <Document nonce={nonce} theme={theme} lang={locale ?? 'en'}>
+    <Document nonce={nonce} theme={theme}>
       <ProgressBar />
       <AuthenticityTokenProvider token={csrfToken}>
         <Auth0Provider
@@ -191,7 +178,9 @@ export default function AppWithProviders() {
           }}>
           {/* To check if the route is a public gazette share page */}
           <AppProvider identiesApiUrl={identiesApiUrl!} nodeEnv={nodeEnv}>
-            <Outlet />
+            <ReactQueryProvider>
+              <Outlet />
+            </ReactQueryProvider>
           </AppProvider>
         </Auth0Provider>
       </AuthenticityTokenProvider>
@@ -207,9 +196,7 @@ export function ErrorBoundary() {
     <Document nonce={nonce} theme={theme}>
       <GenericErrorBoundary
         statusHandlers={{
-          403: ({ error }) => (
-            <p>You are not allowed to do that: {error?.data.message}</p>
-          ),
+          403: ({ error }) => <p>You are not allowed to do that: {error?.data.message}</p>,
         }}
       />
     </Document>

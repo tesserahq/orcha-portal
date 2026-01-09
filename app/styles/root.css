@@ -1,27 +1,200 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-html,
-body {
-  @apply bg-background font-geist;
+@custom-variant dark (&:is(.dark *));
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
   }
 }
 
-/* Variables */
-:root {
-  @apply [--main-sidebar-width:0rem] [--margin-x:1rem] [--sidebar-panel-min-width:64px] [--sidebar-panel-width:300px] md:[--margin-x:1.5rem] md:[--sidebar-panel-width:220px] lg:[--main-sidebar-width:0rem] xl:[--margin-x:4rem];
+@theme {
+  --font-sans: Poppins, sans-serif;
+  --font-inter: Inter, sans-serif;
+  --font-geist: Geist, sans-serif;
+  --font-sourceSans3: Source Sans 3, sans-serif;
+  --font-playfair: Playfair Display, serif;
+
+  --text-tiny: 0.625rem;
+  --text-tiny--line-height: 0.8125rem;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-sidebar-background: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --color-dark-secondary: #2a3040;
+  --color-slate-150: #f2f2f7;
+
+  --color-shiki-light: var(--shiki-light);
+  --color-shiki-light-bg: var(--shiki-light-bg);
+  --color-shiki-dark: var(--shiki-dark);
+  --color-shiki-dark-bg: var(--shiki-dark-bg);
+
+  --shadow-soft: 0 3px 10px 0 rgb(48 46 56 / 6%);
+  --shadow-soft-dark: 0 3px 10px 0 rgb(25 33 50 / 30%);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-typing-dot-bounce: typing-dot-bounce 1.25s ease-out infinite;
+  --animate-slide-up: slide-up 0.5s ease-out forwards;
+  --animate-slide-left: slide-left 0.5s ease-out forwards;
+  --animate-slide-right: slide-right 0.5s ease-out forwards;
+  --animate-slide-down: slide-down 0.5s ease-out forwards;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+  @keyframes typing-dot-bounce {
+    0%,
+    40% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(-0.25rem);
+    }
+  }
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes slide-left {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes slide-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
-.has-min-sidebar {
-  @apply xl:[--margin-x:1.5rem];
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-.is-sidebar-open {
-  @apply xl:[--margin-x:1.5rem];
+@layer utilities {
+  html,
+  body {
+    @apply bg-background font-geist;
+
+    @media (prefers-color-scheme: dark) {
+      color-scheme: dark;
+    }
+  }
+
+  /* Variables */
+  :root {
+    @apply [--main-sidebar-width:0rem] [--margin-x:1rem] [--sidebar-panel-min-width:64px] [--sidebar-panel-width:300px] md:[--margin-x:1.5rem] md:[--sidebar-panel-width:220px] lg:[--main-sidebar-width:0rem] xl:[--margin-x:4rem];
+  }
+
+  .has-min-sidebar {
+    @apply xl:[--margin-x:1.5rem];
+  }
+
+  .is-sidebar-open {
+    @apply xl:[--margin-x:1.5rem];
+  }
 }
 
 @layer base {
@@ -105,11 +278,11 @@ body {
   }
 
   body {
-    @apply font-sans text-sm leading-5 text-slate-800 antialiased [text-rendering:optimizeLegibility] dark:[color-scheme:dark];
+    @apply font-sans text-sm leading-5 text-slate-800 antialiased [text-rendering:optimizeLegibility] dark:scheme-dark;
   }
 
   body.is-monochrome::before {
-    @apply pointer-events-none fixed inset-0 z-[999999] -m-[5rem] h-[calc(100%+10rem)] w-[calc(100%+10rem)] backdrop-grayscale backdrop-opacity-[.92] content-[''];
+    @apply pointer-events-none fixed inset-0 z-999999 -m-20 h-[calc(100%+10rem)] w-[calc(100%+10rem)] backdrop-grayscale backdrop-opacity-[.92] content-[''];
   }
 }
 /* Sidebar Toggle Button */
@@ -139,7 +312,7 @@ body {
 
 /* Sidebar */
 .main-sidebar {
-  @apply fixed left-0 top-0 z-40 h-full w-[var(--main-sidebar-width)] shrink-0 -translate-x-full transform-gpu transition-transform duration-200 ease-in md:z-[60] md:translate-x-0;
+  @apply fixed top-0 left-0 z-40 h-full w-(--main-sidebar-width) shrink-0 -translate-x-full transform-gpu transition-transform duration-200 ease-in md:z-60 md:translate-x-0;
 }
 
 .is-sidebar-open .main-sidebar {
@@ -147,7 +320,7 @@ body {
 }
 
 .sidebar-panel {
-  @apply fixed left-0 top-[61px] z-30 h-full w-[calc(var(--main-sidebar-width)+var(--sidebar-panel-width))] -translate-x-full transform-gpu transition-transform delay-150 duration-200 ease-in md:animate-slide-right md:delay-0;
+  @apply md:animate-slide-right fixed top-[61px] left-0 z-30 h-full w-[calc(var(--main-sidebar-width)+var(--sidebar-panel-width))] -translate-x-full transform-gpu transition-transform delay-150 duration-200 ease-in md:delay-0;
 }
 
 .is-sidebar-open .sidebar-panel {
@@ -155,7 +328,7 @@ body {
 }
 
 .sidebar-panel-min {
-  @apply fixed top-[61px] z-40 h-full w-[var(--sidebar-panel-min-width)] shrink-0 -translate-x-full transform-gpu border-r border-solid border-gray-200 transition-transform duration-200 ease-in dark:border-gray-700 md:translate-x-[var(--main-sidebar-width)];
+  @apply fixed top-[61px] z-40 h-full w-(--sidebar-panel-min-width) shrink-0 -translate-x-full transform-gpu border-r border-solid border-gray-200 transition-transform duration-200 ease-in md:translate-x-(--main-sidebar-width) dark:border-gray-700;
 }
 
 .is-sidebar-open .sidebar-panel-min {
@@ -164,7 +337,7 @@ body {
 
 /* Header */
 nav.header {
-  @apply fixed right-0 top-0 z-20 flex h-[61px] w-full border-b border-border bg-white transition-all duration-200 dark:bg-background md:w-[calc(100%-var(--main-sidebar-width))];
+  @apply border-border dark:bg-background fixed top-0 right-0 z-20 flex h-[61px] w-full border-b bg-white transition-all duration-200 md:w-[calc(100%-var(--main-sidebar-width))];
 }
 
 nav.header:before {
@@ -172,7 +345,7 @@ nav.header:before {
 }
 
 nav.header .header-container {
-  @apply pl-3 pr-5 transition-[padding,width] duration-200 xl:pr-8;
+  @apply pr-5 pl-3 transition-[padding,width] duration-200 xl:pr-8;
 }
 
 /* .has-min-sidebar nav.header {
@@ -184,7 +357,7 @@ nav.header .header-container {
 } */
 
 .is-header-blur nav.header .header-container {
-  @apply backdrop-blur supports-[backdrop-filter]:bg-white dark:supports-[backdrop-filter]:bg-background;
+  @apply dark:supports-backdrop-filter:bg-background backdrop-blur-sm supports-backdrop-filter:bg-white;
 }
 
 .is-header-not-sticky nav.header {
@@ -193,7 +366,7 @@ nav.header .header-container {
 
 /* Main content */
 .main-content {
-  @apply mt-[65px] bg-background px-3 pb-3 pt-5 transition-[width,margin-left,margin-right,padding-left,padding-right] duration-200 ease-in md:ml-[var(--main-sidebar-width)] lg:pl-11 lg:pr-8 print:m-0;
+  @apply bg-background mt-[65px] px-3 pt-5 pb-3 transition-[width,margin-left,margin-right,padding-left,padding-right] duration-200 ease-in md:ml-(--main-sidebar-width) lg:pr-8 lg:pl-11 print:m-0;
 }
 
 .has-min-sidebar .main-content {
@@ -210,7 +383,7 @@ nav.header .header-container {
 }
 
 .navigation\:sideblock .sidebar-panel {
-  @apply w-[var(--sideblock-width)] -translate-x-full;
+  @apply w-(--sideblock-width) -translate-x-full;
 }
 
 .navigation\:sideblock.is-sidebar-open .sidebar-panel {
@@ -230,7 +403,7 @@ nav.header .header-container {
 }
 
 .navigation\:sideblock.is-sidebar-open .main-content {
-  @apply xl:ml-[var(--sideblock-width)];
+  @apply xl:ml-(--sideblock-width);
 }
 
 /* Navigation Horizontal */
@@ -255,7 +428,7 @@ nav.header .header-container {
 
 /* Demo inline space */
 .inline-space > :not([hidden]) {
-  @apply mb-2.5 mr-2.5;
+  @apply mr-2.5 mb-2.5;
 }
 
 /* Scrollbar styles */
@@ -299,7 +472,7 @@ nav.header .header-container {
 }
 
 .d-list .d-item .d-label {
-  @apply min-w-32 max-w-48 flex-shrink-0 overflow-hidden text-ellipsis whitespace-nowrap text-secondary-foreground;
+  @apply text-secondary-foreground max-w-48 min-w-32 flex-shrink-0 overflow-hidden text-ellipsis whitespace-nowrap;
 }
 
 .d-list .d-item .d-content {
@@ -310,7 +483,7 @@ nav.header .header-container {
 /* app-preloader */
 .app-preloader .app-preloader-inner::after,
 .app-preloader .app-preloader-inner::before {
-  @apply absolute left-0 top-0 h-full w-full rounded-full bg-slate-300/[.25] content-[''];
+  @apply absolute top-0 left-0 h-full w-full rounded-full bg-slate-300/25 content-[''];
   animation: spinner-grow 3s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
 }
 
@@ -324,7 +497,7 @@ nav.header .header-container {
 }
 
 .input-error {
-  @apply !border-red-500 transition-all duration-200 ease-in-out hover:border-red-500 focus-visible:!border-red-500 focus-visible:!ring-red-500 dark:!border-red-400 dark:focus-visible:!ring-red-400;
+  @apply border-red-500! transition-all duration-200 ease-in-out hover:border-red-500 focus-visible:border-red-500! focus-visible:ring-red-500! dark:border-red-400! dark:focus-visible:ring-red-400!;
 }
 
 .error-message {
@@ -332,7 +505,7 @@ nav.header .header-container {
 }
 
 .button-link {
-  @apply font-medium hover:text-primary;
+  @apply hover:text-primary font-medium;
 }
 
 .no-scrollbar {
@@ -349,5 +522,5 @@ nav.header .header-container {
 }
 
 .page-title {
-  @apply text-[1.85rem] font-bold dark:text-foreground;
+  @apply dark:text-foreground text-[1.85rem] font-bold;
 }

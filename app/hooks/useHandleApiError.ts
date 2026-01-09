@@ -1,5 +1,5 @@
 import { TokenExpiredError, UnauthorizedError } from '@/libraries/fetch'
-import { useNavigate } from '@remix-run/react'
+import { useNavigate } from 'react-router'
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 
@@ -47,7 +47,7 @@ export const useHandleApiError = () => {
         return false
       }
     },
-    [handleTokenExpiration],
+    [handleTokenExpiration]
   )
 
   return handleApiError
