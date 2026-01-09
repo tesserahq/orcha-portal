@@ -6,7 +6,7 @@
       "name": "chroma",
       "dependencies": {
         "@auth0/auth0-react": "^2.3.0",
-        "@conform-to/react": "1.2.2",
+        "@conform-to/react": "1.15.1",
         "@conform-to/zod": "1.2.2",
         "@epic-web/client-hints": "^1.3.5",
         "@oslojs/crypto": "^1.0.1",
@@ -203,9 +203,9 @@
 
     "@cloudflare/workers-types": ["@cloudflare/workers-types@4.20250909.0", "", {}, "sha512-3WvDDOvFGOAlBUZpWe2N+9BxB1kRt9eHo3AhIKg1fihNdqrGxyh9cJe1MpYs5BI8gXSRxjkDvzPVebRED8iwOQ=="],
 
-    "@conform-to/dom": ["@conform-to/dom@1.2.2", "", {}, "sha512-f05EClpNP31o6lX4LYmmLqgsiTOHdGfY7z2XXK6U6rRp+EtxrkUBdrFlIGsfkf7e9AFO19h3/Cb/cXHVd1k1FA=="],
+    "@conform-to/dom": ["@conform-to/dom@1.15.1", "", {}, "sha512-iqx7Ftp26zygHJq62eXK2Sibc8LVIW28bt7c1uAEsGaa7IsEzjCbNgrWblXcFHohf7vFMDisgF2kv8oS5c9Dmg=="],
 
-    "@conform-to/react": ["@conform-to/react@1.2.2", "", { "dependencies": { "@conform-to/dom": "1.2.2" }, "peerDependencies": { "react": ">=18" } }, "sha512-1JBECb3NKi5/IlexaYLgnAxGJ55MRuO2sEQ10cJfUK2bfltNbTIQnYUDG6pU886A4lda/q6UH/adPsjiB/4Gkg=="],
+    "@conform-to/react": ["@conform-to/react@1.15.1", "", { "dependencies": { "@conform-to/dom": "1.15.1" }, "peerDependencies": { "react": ">=18" } }, "sha512-cKH5K6MOiuIUPr9b4Z6UU5KYNv3rUmB35OEiY5F0cHvac8uCGFIh7Qjvm2bUrSloh+asAvpK5cZjxTsgYI93yg=="],
 
     "@conform-to/zod": ["@conform-to/zod@1.2.2", "", { "dependencies": { "@conform-to/dom": "1.2.2" }, "peerDependencies": { "zod": "^3.21.0" } }, "sha512-mNCzh0XsF2vhCtD8bfHYMYayEJ9dP6/KsGjmq8DFcO1ykDTNQZwfi1MIm4evGYVempSS3poYr4xZjd7cXEbtaw=="],
 
@@ -1976,6 +1976,8 @@
     "@babel/helper-create-class-features-plugin/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
     "@cloudflare/kv-asset-handler/mime": ["mime@2.6.0", "", { "bin": { "mime": "cli.js" } }, "sha512-USPkMeET31rOMiarsBNIHZKLGgvKc/LrjofAnBlOttf5ajRvqiRA8QsenbcooctK6d6Ts6aqZXBA+XbkKthiQg=="],
+
+    "@conform-to/zod/@conform-to/dom": ["@conform-to/dom@1.2.2", "", {}, "sha512-f05EClpNP31o6lX4LYmmLqgsiTOHdGfY7z2XXK6U6rRp+EtxrkUBdrFlIGsfkf7e9AFO19h3/Cb/cXHVd1k1FA=="],
 
     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
 
