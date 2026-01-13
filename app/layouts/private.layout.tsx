@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AppPreloader } from '@/components/loader/pre-loader'
 import { Header, SidebarPanel, SidebarPanelMin, type IMenuItemProps } from '@/components/layouts'
 import { useApp } from '@/context/AppContext'
