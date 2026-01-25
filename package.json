@@ -69,7 +69,7 @@
     "react-day-picker": "^9.11.1",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.70.0",
-    "react-i18next": "^15.4.0",
+    "react-i18next": "^16.0.0",
     "react-js-cron": "^5.2.0",
     "react-markdown": "^10.1.0",
     "react-phone-number-input": "^3.4.13",
