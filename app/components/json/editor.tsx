@@ -128,100 +128,63 @@ export default function JsonEditor({
   }
 
   return (
-    <Tabs defaultValue={initialValue ? 'preview' : 'editor'}>
-      <div className="flex min-h-[300px] gap-4">
-        <Card className="flex w-full flex-col overflow-hidden shadow-none">
-          <CardHeader
-            className="flex flex-row items-center justify-between border-b bg-muted/30 py-1">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-semibold text-foreground">JSON</span>
-              {!isValid && (
-                <Badge
-                  variant={isValid ? 'default' : 'destructive'}
-                  className="flex items-center gap-1">
-                  {isValid ? (
-                    <>
-                      <CheckCircle2 className="h-3 w-3" />
-                      Valid
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="h-3 w-3" />
-                      Invalid
-                    </>
-                  )}
-                </Badge>
-              )}
-            </div>
-            <TabsList>
-              <TabsTrigger value="editor">Editor</TabsTrigger>
-              <TabsTrigger value="preview" disabled={!isValid}>
-                Preview
-              </TabsTrigger>
-            </TabsList>
-          </CardHeader>
-          <CardContent className="relative flex-1 overflow-auto rounded-tr-none p-0">
-            <TabsContent value="editor">
-              <div className="flex h-full">
-                {/* Line Numbers */}
-                <div
-                  ref={lineNumbersRef}
-                  className="flex-shrink-0 overflow-hidden border-r bg-muted/20 px-3 py-1 text-right
-                    font-mono text-xs text-muted-foreground"
-                  style={{ width: '50px' }}>
-                  {lines.map((line) => (
-                    <div key={line} className="leading-6">
-                      {line}
-                    </div>
-                  ))}
-                </div>
-                {/* Textarea */}
-                <div className="relative flex-1 overflow-auto">
-                  <textarea
-                    ref={textareaRef}
-                    value={text}
-                    onChange={handleTextChange}
-                    onScroll={handleScroll}
-                    readOnly={readOnly}
-                    spellCheck={false}
-                    className="absolute inset-0 h-full w-full resize-none bg-transparent px-3 py-1
-                      font-mono text-sm leading-6 text-foreground outline-hidden
-                      selection:bg-primary/20"
-                    style={{ tabSize: 2 }}
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            <TabsContent value="preview">
-              <div className="h-full overflow-auto p-0">
+    <div className="flex min-h-[300px] gap-4">
+      <Card className="flex w-full flex-col overflow-hidden shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 py-1">
+          <div className="flex items-center gap-2 py-1">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-semibold text-foreground">JSON</span>
+            {!isValid && (
+              <Badge
+                variant={isValid ? 'default' : 'destructive'}
+                className="flex items-center gap-1">
                 {isValid ? (
-                  <div className="flex">
-                    <div
-                      ref={lineNumbersRef}
-                      className="flex-shrink-0 overflow-hidden border-r bg-muted/20 px-3 py-1
-                        text-right font-mono text-xs text-muted-foreground"
-                      style={{ width: '50px' }}>
-                      {lines.map((line) => (
-                        <div key={line} className="leading-6">
-                          {line}
-                        </div>
-                      ))}
-                    </div>
-                    <pre className="px-3 py-1 font-mono text-sm leading-6 text-foreground">
-                      {renderHighlightedJson(JSON.stringify(parsed, null, 2))}
-                    </pre>
-                  </div>
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    Valid
+                  </>
                 ) : (
-                  <pre className="font-mono text-sm leading-6 text-muted-foreground">
-                    {text || 'Enter JSON to see preview...'}
-                  </pre>
+                  <>
+                    <AlertCircle className="h-3 w-3" />
+                    Invalid
+                  </>
                 )}
-              </div>
-            </TabsContent>
-          </CardContent>
-        </Card>
-      </div>
-    </Tabs>
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="relative flex-1 overflow-auto rounded-tr-none p-0">
+          <div className="flex h-full">
+            {/* Line Numbers */}
+            <div
+              ref={lineNumbersRef}
+              className="flex-shrink-0 overflow-hidden border-r bg-muted/20 px-3 py-1 text-right
+                font-mono text-xs text-muted-foreground"
+              style={{ width: '50px' }}>
+              {lines.map((line) => (
+                <div key={line} className="leading-6">
+                  {line}
+                </div>
+              ))}
+            </div>
+            {/* Textarea */}
+            <div className="relative flex-1 overflow-auto">
+              <textarea
+                ref={textareaRef}
+                value={text}
+                onChange={handleTextChange}
+                onScroll={handleScroll}
+                readOnly={readOnly}
+                spellCheck={false}
+                className="absolute inset-0 h-full w-full resize-none bg-transparent px-3 py-1
+                  font-mono text-sm leading-6 text-foreground outline-hidden
+                  selection:bg-primary/20"
+                style={{ tabSize: 2 }}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
