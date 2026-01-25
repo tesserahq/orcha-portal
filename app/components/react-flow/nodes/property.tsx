@@ -10,7 +10,7 @@ import EventTypeItems from './event-type-items'
 
 interface IProps {
   property: INodeProperty
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   parameter: any
   onChange: (field: string, value: string) => void
   eventTypes?: string[]
@@ -24,6 +24,8 @@ export default function NodeProperty({
   eventTypes,
   isLoading,
 }: IProps) {
+  console.log('property', property)
+
   return (
     <>
       <Label className="flex items-center gap-2">
@@ -31,10 +33,15 @@ export default function NodeProperty({
         {property.description && (
           <TooltipProvider delayDuration={100}>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Info size={13} className="text-muted-foreground" />
               </TooltipTrigger>
-              <TooltipContent side="right">{property.description}</TooltipContent>
+              <TooltipContent
+                side="right"
+                avoidCollisions={false}
+                className="max-w-xs wrap-break-word">
+                {property.description}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
