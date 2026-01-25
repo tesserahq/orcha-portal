@@ -24,8 +24,6 @@ export default function NodeProperty({
   eventTypes,
   isLoading,
 }: IProps) {
-  console.log('property', property)
-
   return (
     <>
       <Label className="flex items-center gap-2">

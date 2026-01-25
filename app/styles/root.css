@@ -195,6 +195,10 @@
   .is-sidebar-open {
     @apply xl:[--margin-x:1.5rem];
   }
+
+  .react-flow__controls-button {
+    @apply border-border! bg-card! h-8 w-8 transition-colors;
+  }
 }
 
 @layer base {
