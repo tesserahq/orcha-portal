@@ -160,20 +160,27 @@ export default function WorkflowsIndex() {
               key={workflow.id}
               className="overflow-hidden rounded-lg bg-card text-card-foreground shadow-sm
                 transition-shadow duration-200 mb-2.5 shadow-card">
-              <CardContent className="flex items-center gap-2 p-4">
-                <div className="flex-1">
+              <CardContent className="flex min-w-0 items-center gap-2 p-4">
+                <div className="min-w-0 flex-1">
                   <Link
                     to={`/workflows/${workflow.id}`}
-                    className="mb-1 text-base font-medium text-black hover:text-primary
-                      hover:underline dark:text-primary-foreground">
-                    {workflow.name}
+                    title={workflow.name}
+                    className="mb-1 block w-full truncate text-base font-medium text-black
+                      hover:text-primary hover:underline dark:text-primary-foreground">
+                    {workflow.name.length > 100
+                      ? `${workflow.name.slice(0, 100)}...`
+                      : workflow.name}
                   </Link>
 
                   <div
                     className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1">
                       <span>Created</span>
-                      <DateTime date={workflow.created_at!} />
+                      <DateTime
+                        date={workflow.created_at!}
+                        tooltipSide="right"
+                        tooltipAlign="center"
+                      />
                     </div>
                     {workflow.is_active && <Badge>Active</Badge>}
                   </div>
@@ -191,15 +198,6 @@ export default function WorkflowsIndex() {
                       onClick={() => navigate(`/workflows/${workflow.id}`)}>
                       <EyeIcon size={18} />
                       <span>View</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="flex w-full justify-start gap-2"
-                      onClick={() => {
-                        navigate(`/workflows/${workflow.id}/edit`)
-                      }}>
-                      <Edit size={18} />
-                      <span>Edit</span>
                     </Button>
                     <Button
                       variant="ghost"
