@@ -1,25 +1,29 @@
-import { AppPreloader } from '@/components/loader/pre-loader'
-import NewButton from '@/components/new-button/new-button'
-import { DataTable } from '@/components/data-table'
-import DeleteConfirmation from '@/components/misc/Dialog/DeleteConfirmation'
 import EmptyContent from '@/components/empty-content/empty-content'
-import { Badge } from '@shadcn/ui/badge'
-import { Button } from '@shadcn/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
+import { AppPreloader } from '@/components/loader/pre-loader'
+import DeleteConfirmation from '@/components/misc/Dialog/DeleteConfirmation'
 import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi, NodeENVType } from '@/libraries/fetch'
+import { Card, CardContent } from '@/modules/shadcn/ui/card'
 import { IPaging } from '@/resources/types'
 import { IWorkflow } from '@/types/workflow'
 import { handleFetcherData } from '@/utils/fetcher.data'
 import { ensureCanonicalPagination } from '@/utils/pagination.server'
 import { redirectWithToast } from '@/utils/toast.server'
-import { Link, useLoaderData, useNavigate } from 'react-router'
-import { ActionFunctionArgs, LoaderFunctionArgs, useFetcher } from 'react-router'
-import type { ColumnDef } from '@tanstack/react-table'
-import { Edit, Ellipsis, EyeIcon, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { DateTime } from '@/components/datetime'
+import { Badge } from '@shadcn/ui/badge'
+import { Button } from '@shadcn/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
+import { Edit, EllipsisVertical, EyeIcon, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  ActionFunctionArgs,
+  Link,
+  LoaderFunctionArgs,
+  useFetcher,
+  useLoaderData,
+  useNavigate,
+} from 'react-router'
+import { DateTime, NewButton } from 'tessera-ui/components'
 
 export function loader({ request }: LoaderFunctionArgs) {
   const canonical = ensureCanonicalPagination(request, {
@@ -126,108 +130,6 @@ export default function WorkflowsIndex() {
     })
   }, [deleteFetcher.data])
 
-  const columns = useMemo<ColumnDef<IWorkflow>[]>(
-    () => [
-      {
-        accessorKey: 'name',
-        header: 'Name',
-        size: 200,
-        cell: ({ row }) => {
-          return (
-            <Link to={`/workflows/${row.original.id}`} className="button-link">
-              {row.original.name}
-            </Link>
-          )
-        },
-      },
-      {
-        accessorKey: 'description',
-        header: 'Description',
-        size: 300,
-        cell: ({ row }) => {
-          return (
-            <span className="text-sm text-muted-foreground">{row.original.description || '-'}</span>
-          )
-        },
-      },
-      {
-        accessorKey: 'is_active',
-        header: 'Status',
-        size: 120,
-        cell: ({ row }) => {
-          return (
-            <Badge variant={row.original.is_active ? 'default' : 'secondary'}>
-              {row.original.is_active ? 'Active' : 'Inactive'}
-            </Badge>
-          )
-        },
-      },
-      {
-        accessorKey: 'created_at',
-        header: 'Created At',
-        size: 180,
-        cell: ({ row }) => {
-          const date = row.getValue('created_at') as string
-          return <DateTime date={date} />
-        },
-      },
-      {
-        accessorKey: 'updated_at',
-        header: 'Updated At',
-        size: 180,
-        cell: ({ row }) => {
-          const date = row.getValue('updated_at') as string
-          return <DateTime date={date} />
-        },
-      },
-      {
-        accessorKey: 'id',
-        header: '',
-        size: 5,
-        cell: ({ row }) => {
-          const { id } = row.original
-
-          return (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button size="icon" variant="ghost" className="px-0">
-                  <Ellipsis size={18} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" side="right" className="w-40 p-1">
-                <Button
-                  variant="ghost"
-                  className="flex w-full justify-start gap-2"
-                  onClick={() => navigate(`/workflows/${id}`)}>
-                  <EyeIcon size={18} />
-                  <span>View</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="flex w-full justify-start gap-2"
-                  onClick={() => {
-                    navigate(`/workflows/${id}/edit`)
-                  }}>
-                  <Edit size={18} />
-                  <span>Edit</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="flex w-full justify-start gap-2 hover:bg-destructive
-                    hover:text-destructive-foreground"
-                  onClick={() => handleDeleteClick(row.original)}>
-                  <Trash2 size={18} />
-                  <span>Delete</span>
-                </Button>
-              </PopoverContent>
-            </Popover>
-          )
-        },
-      },
-    ],
-    [handleDeleteClick, navigate]
-  )
-
   if (appLoading || firstLoading) return <AppPreloader />
 
   return (
@@ -250,19 +152,67 @@ export default function WorkflowsIndex() {
         </EmptyContent>
       )}
 
-      {workflows?.items && workflows?.items?.length > 0 && (
-        <DataTable
-          columns={columns}
-          data={workflows?.items}
-          meta={{
-            page: workflows?.page || 1,
-            size: workflows?.size || 25,
-            total: workflows?.total || 0,
-            pages: workflows?.pages || 1,
-          }}
-          isLoading={isLoading}
-        />
-      )}
+      {workflows?.items &&
+        workflows?.items?.length > 0 &&
+        workflows.items.map((workflow) => {
+          return (
+            <Card
+              key={workflow.id}
+              className="overflow-hidden rounded-lg bg-card text-card-foreground shadow-sm
+                transition-shadow duration-200 mb-2.5 shadow-card">
+              <CardContent className="flex min-w-0 items-center gap-2 p-4">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/workflows/${workflow.id}`}
+                    title={workflow.name}
+                    className="mb-1 block w-full truncate text-base font-medium text-black
+                      hover:text-primary hover:underline dark:text-primary-foreground">
+                    {workflow.name.length > 100
+                      ? `${workflow.name.slice(0, 100)}...`
+                      : workflow.name}
+                  </Link>
+
+                  <div
+                    className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center gap-1">
+                      <span>Created</span>
+                      <DateTime
+                        date={workflow.created_at!}
+                        tooltipSide="right"
+                        tooltipAlign="center"
+                      />
+                    </div>
+                    {workflow.is_active && <Badge>Active</Badge>}
+                  </div>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="icon" variant="ghost" className="px-0">
+                      <EllipsisVertical size={18} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" side="right" className="w-40 p-1">
+                    <Button
+                      variant="ghost"
+                      className="flex w-full justify-start gap-2"
+                      onClick={() => navigate(`/workflows/${workflow.id}`)}>
+                      <EyeIcon size={18} />
+                      <span>View</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="flex w-full justify-start gap-2 hover:bg-destructive
+                        hover:text-destructive-foreground"
+                      onClick={() => handleDeleteClick(workflow)}>
+                      <Trash2 size={18} />
+                      <span>Delete</span>
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+            </Card>
+          )
+        })}
 
       <DeleteConfirmation
         open={deleteDialogOpen}

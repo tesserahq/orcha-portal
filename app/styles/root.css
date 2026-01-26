@@ -195,6 +195,10 @@
   .is-sidebar-open {
     @apply xl:[--margin-x:1.5rem];
   }
+
+  .react-flow__controls-button {
+    @apply border-border! bg-card! h-8 w-8 transition-colors;
+  }
 }
 
 @layer base {
@@ -523,4 +527,13 @@ nav.header .header-container {
 
 .page-title {
   @apply dark:text-foreground text-[1.85rem] font-bold;
+}
+
+.shadow-card {
+  box-shadow: rgba(145, 145, 145, 0.1) 0px 4px 12px;
+  border: none;
+}
+
+.shadow-card:hover {
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 }

@@ -100,7 +100,6 @@ export default function ReactFlowCanvas({
   const convertInitialNodesToReactFlowNodes = useCallback(
     (nodesToConvert: INodeInput[]): Node[] => {
       const reactFlowNodes = nodesToConvert.map((node: INodeInput) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { edges, ...uiSettingsWithoutEdges } = node.ui_settings
 
         return {
@@ -731,19 +730,22 @@ export default function ReactFlowCanvas({
       <div
         className="absolute -top-1 left-0 z-10 flex w-full animate-slide-down items-center
           justify-between border-b bg-card py-3 pl-4 pr-8">
-        <input
-          value={workflowPayload?.name}
-          readOnly={isExecution}
-          onChange={(e) =>
-            setWorkflowPayload({
-              ...workflowPayload,
-              name: e.target.value || '',
-            })
-          }
-          onBlur={() => {}}
-          className="w-auto min-w-20! border-none border-transparent bg-transparent text-lg!
-            font-semibold outline-hidden focus-visible:outline-0 focus-visible:ring-0"
-        />
+        <div className="max-w-[70%] shrink-0">
+          <input
+            value={workflowPayload?.name}
+            aria-label="Workflow name"
+            readOnly={isExecution}
+            onChange={(e) =>
+              setWorkflowPayload({
+                ...workflowPayload,
+                name: e.target.value || '',
+              })
+            }
+            onBlur={() => {}}
+            className="w-full border-none border-transparent bg-transparent text-lg! font-semibold
+              outline-hidden focus-visible:outline-0 focus-visible:ring-0 truncate"
+          />
+        </div>
 
         <div className="absolute left-[44%] top-10">
           <Tabs
