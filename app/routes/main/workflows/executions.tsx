@@ -111,7 +111,6 @@ export async function action({ request }: ActionFunctionArgs) {
       },
       response: { workflow: response },
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     const convertError = JSON.parse(error?.message || '{}')
 
