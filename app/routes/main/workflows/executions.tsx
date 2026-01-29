@@ -9,8 +9,7 @@ import { fetchApi } from '@/libraries/fetch'
 import { INodeInput, IWorkflow } from '@/types/workflow'
 import { redirectWithToast } from '@/utils/toast.server'
 import { ActionFunctionArgs } from 'react-router'
-import { useFetcher, useLoaderData, useParams } from 'react-router'
-import { handleFetcherData } from '@/utils/fetcher.data'
+import { useLoaderData, useParams } from 'react-router'
 
 export function loader() {
   const apiUrl = process.env.API_URL
@@ -23,7 +22,6 @@ export default function WorkflowExecution() {
   const { apiUrl, nodeEnv } = useLoaderData<typeof loader>()
   const { token } = useApp()
   const params = useParams()
-  const fetcher = useFetcher()
   const handleApiError = useHandleApiError()
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [workflow, setWorkflow] = useState<IWorkflow>()
@@ -66,12 +64,6 @@ export default function WorkflowExecution() {
   }
 
   useEffect(() => {
-    if (fetcher.data) {
-      handleFetcherData(fetcher.data)
-    }
-  }, [fetcher.data])
-
-  useEffect(() => {
     if (token) {
       fetchWorkflowDetail()
     }
@@ -87,7 +79,6 @@ export default function WorkflowExecution() {
         initialNodes={workflow?.nodes || []}
         initialEdges={edges}
         workflow={workflow}
-        fetcher={fetcher}
         isExecution
       />
 

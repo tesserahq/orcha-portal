@@ -1,29 +1,22 @@
 import EmptyContent from '@/components/empty-content/empty-content'
+import { Pagination } from '@/components/data-table/data-pagination'
 import { AppPreloader } from '@/components/loader/pre-loader'
-import DeleteConfirmation from '@/components/misc/Dialog/DeleteConfirmation'
 import { useApp } from '@/context/AppContext'
-import { useHandleApiError } from '@/hooks/useHandleApiError'
-import { fetchApi, NodeENVType } from '@/libraries/fetch'
+import { NodeENVType } from '@/libraries/fetch'
 import { Card, CardContent } from '@/modules/shadcn/ui/card'
-import { IPaging } from '@/resources/types'
-import { IWorkflow } from '@/types/workflow'
-import { handleFetcherData } from '@/utils/fetcher.data'
+import { useDeleteWorkflow, useWorkflows } from '@/resources/hooks/workflows/use-workflows'
+import { WorkflowType } from '@/resources/queries/workflows/workflow.type'
 import { ensureCanonicalPagination } from '@/utils/pagination.server'
-import { redirectWithToast } from '@/utils/toast.server'
 import { Badge } from '@shadcn/ui/badge'
 import { Button } from '@shadcn/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
 import { Edit, EllipsisVertical, EyeIcon, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
-import {
-  ActionFunctionArgs,
-  Link,
-  LoaderFunctionArgs,
-  useFetcher,
-  useLoaderData,
-  useNavigate,
-} from 'react-router'
+import { useMemo, useRef } from 'react'
+import { Link, LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router'
 import { DateTime, NewButton } from 'tessera-ui/components'
+import DeleteConfirmation, {
+  type DeleteConfirmationHandle,
+} from 'tessera-ui/components/delete-confirmation'
 
 export function loader({ request }: LoaderFunctionArgs) {
   const canonical = ensureCanonicalPagination(request, {
@@ -46,102 +39,60 @@ export default function WorkflowsIndex() {
     size: number
     page: number
   }
-  const { token, isLoading: appLoading } = useApp()
-  const handleApiError = useHandleApiError()
+  const { token } = useApp()
   const navigate = useNavigate()
-  const deleteFetcher = useFetcher()
+  const deleteConfirmationRef = useRef<DeleteConfirmationHandle>(null)
 
-  const [workflows, setWorkflows] = useState<IPaging<IWorkflow>>()
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [firstLoading, setFirstLoading] = useState<boolean>(true)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
-  const [workflowToDelete, setWorkflowToDelete] = useState<IWorkflow | null>(null)
+  const config = {
+    apiUrl: apiUrl!,
+    token: token!,
+    nodeEnv,
+  }
 
-  const fetchWorkflows = useCallback(async () => {
-    if (!token || !apiUrl) {
-      setFirstLoading(false)
-      return
-    }
+  const { data, isLoading, error } = useWorkflows(config, { page, size }, { enabled: !!token })
 
-    setIsLoading(true)
-    try {
-      const response = (await fetchApi(`${apiUrl}/workflows`, token, nodeEnv, {
-        pagination: { page, size },
-      })) as IPaging<IWorkflow>
+  const { mutateAsync: deleteWorkflow } = useDeleteWorkflow(config, {
+    onSuccess: () => {
+      deleteConfirmationRef.current?.close()
+    },
+    onError: () => {
+      deleteConfirmationRef.current?.updateConfig({ isLoading: false })
+    },
+  })
 
-      setWorkflows(response)
-    } catch (error) {
-      handleApiError(error)
-    } finally {
-      setIsLoading(false)
-      setFirstLoading(false)
-    }
-  }, [token, apiUrl, nodeEnv, page, size, handleApiError])
-
-  const handleDeleteClick = useCallback((workflow: IWorkflow) => {
-    setWorkflowToDelete(workflow)
-    setDeleteDialogOpen(true)
-  }, [])
-
-  const handleConfirmDelete = useCallback(() => {
-    if (!token || !workflowToDelete) return
-
-    deleteFetcher.submit(
-      {
-        workflowId: workflowToDelete?.id as string,
-        token: token,
+  const handleDeleteClick = (workflow: WorkflowType) => {
+    deleteConfirmationRef.current?.open({
+      title: 'Remove Workflow',
+      description: `This will remove "${workflow.name}" from your workflows. This action cannot be undone.`,
+      onDelete: async () => {
+        deleteConfirmationRef.current?.updateConfig({ isLoading: true })
+        await deleteWorkflow(workflow.id as string)
       },
-      {
-        method: 'POST',
-      }
-    )
-  }, [deleteFetcher, token, workflowToDelete])
-
-  useEffect(() => {
-    if (token) {
-      fetchWorkflows()
-    }
-  }, [token, fetchWorkflows])
-
-  useEffect(() => {
-    if (!deleteFetcher.data) return
-
-    handleFetcherData(deleteFetcher.data, (responseData: { workflowId: string }) => {
-      setWorkflows((previousData) => {
-        if (!previousData) return previousData
-
-        const updatedItems = previousData.items.filter(
-          (workflowItem) => workflowItem.id !== responseData.workflowId
-        )
-        const updatedTotal = Math.max(previousData.total - 1, 0)
-        const updatedPages =
-          previousData.size > 0 ? Math.ceil(updatedTotal / previousData.size) : previousData.pages
-
-        return {
-          ...previousData,
-          total: updatedTotal,
-          pages: updatedPages,
-          items: updatedItems,
-        }
-      })
-
-      setDeleteDialogOpen(false)
-      setWorkflowToDelete(null)
     })
-  }, [deleteFetcher.data])
+  }
 
-  if (appLoading || firstLoading) return <AppPreloader />
+  if (isLoading) return <AppPreloader />
+
+  if (error) {
+    return (
+      <EmptyContent
+        image="/images/empty-workflows.png"
+        title="Failed to get workflows"
+        description={error.message}
+      />
+    )
+  }
 
   return (
     <div className="animate-slide-up">
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Workflows</h1>
-        {!isLoading && workflows?.items?.length !== 0 && (
+        {!isLoading && data?.items?.length !== 0 && (
           <NewButton label="New Source" onClick={() => navigate('/workflows/new')} />
         )}
       </div>
 
-      {!isLoading && workflows?.items?.length === 0 && (
+      {!isLoading && data?.items?.length === 0 && (
         <EmptyContent
           title="No workflows found"
           description="Workflows will appear here when they are created"
@@ -152,9 +103,9 @@ export default function WorkflowsIndex() {
         </EmptyContent>
       )}
 
-      {workflows?.items &&
-        workflows?.items?.length > 0 &&
-        workflows.items.map((workflow) => {
+      {data?.items &&
+        data?.items?.length > 0 &&
+        data.items.map((workflow) => {
           return (
             <Card
               key={workflow.id}
@@ -214,46 +165,20 @@ export default function WorkflowsIndex() {
           )
         })}
 
-      <DeleteConfirmation
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        title="Remove Workflow"
-        description={`This will remove "${workflowToDelete?.name ?? ''}" from your workflows. This action cannot be undone.`}
-        onDelete={handleConfirmDelete}
-        fetcher={deleteFetcher}
-      />
+      {data?.items && data.items.length > 0 && (
+        <div className="mt-6">
+          <Pagination
+            meta={{
+              page: data.page,
+              pages: data.pages,
+              size: data.size,
+              total: data.total,
+            }}
+          />
+        </div>
+      )}
+
+      <DeleteConfirmation ref={deleteConfirmationRef} />
     </div>
   )
-}
-
-export async function action({ request }: ActionFunctionArgs) {
-  const apiUrl = process.env.API_URL
-  const nodeEnv = process.env.NODE_ENV
-  const formData = await request.formData()
-  const { token, workflowId } = Object.fromEntries(formData)
-
-  try {
-    await fetchApi(`${apiUrl}/workflows/${workflowId}`, token as string, nodeEnv, {
-      method: 'DELETE',
-    })
-
-    return Response.json({
-      toast: {
-        type: 'success' as const,
-        title: 'Success',
-        description: 'Workflow deleted successfully',
-      },
-      response: { workflowId },
-    })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    const convertError = JSON.parse(error?.message || '{}')
-    return redirectWithToast('/workflows', {
-      type: 'error',
-      title: 'Error',
-      description: `${convertError.status || 500} - ${
-        convertError.error || 'Failed to delete workflow'
-      }`,
-    })
-  }
 }

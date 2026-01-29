@@ -1,26 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { AppPreloader } from '@/components/loader/pre-loader'
-import ReactFlowCanvas from '@/components/react-flow/canvas'
+import ReactFlowCanvas, { type ReactFlowCanvasHandle } from '@/components/react-flow/canvas'
+import UnsavedChangesDialog from '@/components/workflows/unsaved-changes-dialog'
 import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi } from '@/libraries/fetch'
 import { INodeInput, IWorkflow } from '@/types/workflow'
 import { redirectWithToast } from '@/utils/toast.server'
 import { ActionFunctionArgs } from 'react-router'
-import { useBlocker, useFetcher, useLoaderData, useParams } from 'react-router'
-import { handleFetcherData } from '@/utils/fetcher.data'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@shadcn/ui/dialog'
-import { Button } from '@shadcn/ui/button'
-import { AlertTriangle } from 'lucide-react'
+import { useBlocker, useLoaderData, useParams } from 'react-router'
 
 export function loader() {
   const apiUrl = process.env.API_URL
@@ -33,16 +23,18 @@ export default function WorkflowDetails() {
   const { apiUrl, nodeEnv } = useLoaderData<typeof loader>()
   const { token } = useApp()
   const params = useParams()
-  const fetcher = useFetcher()
   const handleApiError = useHandleApiError()
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [workflow, setWorkflow] = useState<IWorkflow>()
   const [edges, setEdges] = useState([])
   const [showDialog, setShowDialog] = useState(false)
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const canvasRef = useRef<ReactFlowCanvasHandle>(null)
 
   const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-    return currentLocation.pathname !== nextLocation.pathname
+    return hasUnsavedChanges && currentLocation.pathname !== nextLocation.pathname
   })
 
   const fetchWorkflowDetail = async () => {
@@ -83,12 +75,6 @@ export default function WorkflowDetails() {
   }
 
   useEffect(() => {
-    if (fetcher.data) {
-      handleFetcherData(fetcher.data)
-    }
-  }, [fetcher.data])
-
-  useEffect(() => {
     if (token) {
       fetchWorkflowDetail()
     }
@@ -106,6 +92,12 @@ export default function WorkflowDetails() {
   }, [blocker])
 
   useEffect(() => {
+    if (!hasUnsavedChanges) {
+      setShowDialog(false)
+      setPendingNavigation(null)
+      return
+    }
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault()
       e.returnValue = '' // required for Chrome
@@ -116,7 +108,7 @@ export default function WorkflowDetails() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [])
+  }, [hasUnsavedChanges])
 
   const handleCancel = () => {
     if (blocker.state === 'blocked') {
@@ -129,6 +121,18 @@ export default function WorkflowDetails() {
   const handleConfirm = () => {
     if (pendingNavigation) {
       pendingNavigation()
+    }
+  }
+
+  const handleSaveAndLeave = async () => {
+    setIsSaving(true)
+    try {
+      const didSave = await canvasRef.current?.save({ shouldRedirect: false })
+      if (didSave) {
+        handleConfirm()
+      }
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -145,37 +149,22 @@ export default function WorkflowDetails() {
   return (
     <>
       <ReactFlowCanvas
+        ref={canvasRef}
         apiUrl={apiUrl!}
         nodeEnv={nodeEnv!}
         initialNodes={workflow?.nodes || []}
         initialEdges={edges}
         workflow={workflow}
-        fetcher={fetcher}
+        onDirtyChange={setHasUnsavedChanges}
       />
 
-      <Dialog open={showDialog} onOpenChange={handleDialogOpenChange}>
-        <DialogContent className="max-w-md border-t-4 border-t-destructive">
-          <DialogHeader className="flex flex-col items-center">
-            <div
-              className="-mt-16 flex h-16 w-16 items-center justify-center rounded-full
-                bg-destructive p-3 dark:bg-yellow-900">
-              <AlertTriangle className="h-8 w-8 text-white" />
-            </div>
-            <DialogTitle className="mt-3! text-2xl font-semibold">Leave this page?</DialogTitle>
-            <DialogDescription className="mt-2 text-center">
-              You have unsaved changes. Are you sure you want to leave? Your changes will be lost.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4 flex w-full justify-center gap-2">
-            <Button variant="outline" onClick={handleCancel} className="w-full">
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleConfirm} className="w-full">
-              Leave Page
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UnsavedChangesDialog
+        open={showDialog}
+        onOpenChange={handleDialogOpenChange}
+        onLeaveWithoutSaving={handleConfirm}
+        onSave={handleSaveAndLeave}
+        isSaving={isSaving}
+      />
     </>
   )
 }
@@ -200,7 +189,6 @@ export async function action({ request }: ActionFunctionArgs) {
       },
       response: { workflow: response },
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     const convertError = JSON.parse(error?.message || '{}')
 
