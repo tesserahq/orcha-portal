@@ -6,6 +6,11 @@ import { Switch } from '@shadcn/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@shadcn/ui/tabs'
 import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
+import { useCreateWorkflow, useUpdateWorkflow } from '@/resources/hooks/workflows/use-workflows'
+import {
+  CreateWorkflowInput,
+  UpdateWorkflowInput,
+} from '@/resources/queries/workflows/workflow.schema'
 import { INodeInput, IWorkflow } from '@/types/workflow'
 import { cn } from '@shadcn/lib/utils'
 import { useLocation, useNavigate, useParams } from 'react-router'
@@ -23,28 +28,27 @@ import {
   ReactFlow,
 } from '@xyflow/react'
 import { FlaskConical } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
+export type ReactFlowCanvasHandle = {
+  save: (options?: { shouldRedirect?: boolean }) => Promise<boolean>
+}
 
 interface IProps {
   apiUrl: string
   nodeEnv: NodeENVType
   initialNodes: INodeInput[]
   initialEdges: Edge[]
-  fetcher: any
   workflow?: IWorkflow
   isExecution?: boolean
+  onDirtyChange?: (isDirty: boolean) => void
 }
 
-export default function ReactFlowCanvas({
-  apiUrl,
-  nodeEnv,
-  initialNodes,
-  initialEdges,
-  workflow,
-  fetcher,
-  isExecution,
-}: IProps) {
+const ReactFlowCanvasInner = (
+  { apiUrl, nodeEnv, initialNodes, initialEdges, workflow, isExecution, onDirtyChange }: IProps,
+  ref: React.ForwardedRef<ReactFlowCanvasHandle>
+) => {
   const params = useParams()
   const { token } = useApp()
   const { pathname } = useLocation()
@@ -63,6 +67,25 @@ export default function ReactFlowCanvas({
     is_active: workflow?.is_active || false,
     nodes: workflow?.nodes || [],
   })
+  const [isDirty, setIsDirty] = useState(false)
+  const skipInitialDirtyRef = useRef(true)
+  const config = {
+    apiUrl,
+    token: token!,
+    nodeEnv,
+  }
+
+  const { mutateAsync: createWorkflow, isPending: isCreating } = useCreateWorkflow(config, {
+    onError: () => {
+      setIsExecuting(false)
+    },
+  })
+  const { mutateAsync: updateWorkflow, isPending: isUpdating } = useUpdateWorkflow(config, {
+    onError: () => {
+      setIsExecuting(false)
+    },
+  })
+  const isSaving = isCreating || isUpdating
   const nodeTypes = {
     add: NodeAdd as any,
     addIf: NodeAdd as any,
@@ -71,26 +94,81 @@ export default function ReactFlowCanvas({
     if: NodeIf as any,
   }
 
-  const onNodesChange = useCallback((changes: NodeChange<Node>[]) => {
-    setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot))
-  }, [])
+  useEffect(() => {
+    const frameId = requestAnimationFrame(() => {
+      skipInitialDirtyRef.current = false
+    })
 
-  const onEdgesChange = useCallback((changes: EdgeChange<Edge>[]) => {
-    setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot))
-  }, [])
-
-  const onConnect = useCallback((params: Connection) => {
-    const customParams: Edge = {
-      ...params,
-      id: `${params.source}->${params.target}`,
+    return () => {
+      cancelAnimationFrame(frameId)
     }
-
-    if (params.target !== 'add') {
-      customParams.type = ''
-    }
-
-    setEdges((edgesSnapshot) => addEdge(customParams, edgesSnapshot))
   }, [])
+
+  const markDirty = useCallback(() => {
+    if (isExecution || isDirty || skipInitialDirtyRef.current) return
+    setIsDirty(true)
+  }, [isExecution, isDirty])
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
+  const shouldMarkDirtyFromNodes = useCallback((changes: NodeChange<Node>[]) => {
+    return changes.some((change) => {
+      if (change.type === 'position') {
+        return change.dragging === true
+      }
+
+      if (change.type === 'dimensions') {
+        return change.resizing === true
+      }
+
+      return change.type === 'add' || change.type === 'remove'
+    })
+  }, [])
+
+  const shouldMarkDirtyFromEdges = useCallback((changes: EdgeChange<Edge>[]) => {
+    return changes.some((change) => change.type === 'add' || change.type === 'remove')
+  }, [])
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange<Node>[]) => {
+      if (shouldMarkDirtyFromNodes(changes)) {
+        markDirty()
+      }
+      setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot))
+    },
+    [markDirty, shouldMarkDirtyFromNodes]
+  )
+
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange<Edge>[]) => {
+      if (shouldMarkDirtyFromEdges(changes)) {
+        markDirty()
+      }
+      setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot))
+    },
+    [markDirty, shouldMarkDirtyFromEdges]
+  )
+
+  const onConnect = useCallback(
+    (params: Connection) => {
+      markDirty()
+      console.log('makedirty onConnect')
+
+      const customParams: Edge = {
+        ...params,
+        id: `${params.source}->${params.target}`,
+      }
+
+      if (params.target !== 'add') {
+        customParams.type = ''
+      }
+
+      setEdges((edgesSnapshot) => addEdge(customParams, edgesSnapshot))
+    },
+    [markDirty]
+  )
 
   const handleOpenAddDialog = useCallback(
     (node?: Node, nodeAddId?: string) => nodeCategoriesRef.current?.onOpen(node, nodeAddId),
@@ -286,6 +364,8 @@ export default function ReactFlowCanvas({
       if (deleted.length === 0) {
         return
       }
+      markDirty()
+      console.log('makedirty onNodesDelete')
 
       const nodesSnapshot = [...nodes]
       const edgesSnapshot = [...edges]
@@ -339,7 +419,7 @@ export default function ReactFlowCanvas({
       setNodes(nodesWithPlaceholders)
       setEdges(edgesWithPlaceholders)
     },
-    [collectNodesForRemoval, ensurePlaceholderNodes, nodes, edges]
+    [collectNodesForRemoval, ensurePlaceholderNodes, nodes, edges, markDirty]
   )
 
   const onSaveNode = (
@@ -347,6 +427,9 @@ export default function ReactFlowCanvas({
     currentNode?: Node | undefined,
     nodeAddId?: string | undefined
   ) => {
+    markDirty()
+    console.log('makedirty onSaveNode')
+
     let newNodeId = ''
     let previousNodeId: string | null = null
     let newWorkflowNode: Node
@@ -542,11 +625,19 @@ export default function ReactFlowCanvas({
     nodeCategoriesRef.current?.onClose()
   }
 
-  const onSaveWorkflow = ({ isExecution }: { isExecution: boolean }) => {
+  const onSaveWorkflow = async ({
+    isExecution,
+    shouldRedirect = true,
+  }: {
+    isExecution: boolean
+    shouldRedirect?: boolean
+  }) => {
+    setIsDirty(false)
+
     // check if last nodes have node type addIf, its mean we have node if but don't have node after true/false
     if (nodes[nodes.length - 1].type === 'addIf') {
       toast.error('You must add node after If node')
-      return
+      return false
     }
 
     const payload = {
@@ -589,16 +680,38 @@ export default function ReactFlowCanvas({
       setIsExecuting(true)
     }
 
-    fetcher.submit(
-      {
-        token: token!,
-        workflow: JSON.stringify(payload),
-        id: params?.workflow_id || '',
-        isExecution: isExecution,
-      },
-      { method: params?.workflow_id ? 'PUT' : 'POST' }
-    )
+    try {
+      if (params?.workflow_id) {
+        await updateWorkflow({
+          id: params.workflow_id,
+          data: payload as UpdateWorkflowInput,
+        })
+
+        return true
+      }
+
+      const response = await createWorkflow(payload as CreateWorkflowInput)
+      if (response?.id) {
+        if (shouldRedirect) {
+          const redirectUrl = isExecution
+            ? `/workflows/${response.id}/executions`
+            : `/workflows/${response.id}`
+          navigate(redirectUrl)
+        }
+        return true
+      }
+    } catch (error) {
+      setIsExecuting(false)
+    }
+
+    return false
   }
+
+  useImperativeHandle(ref, () => ({
+    save: async (options) => {
+      return onSaveWorkflow({ isExecution: false, shouldRedirect: options?.shouldRedirect })
+    },
+  }))
 
   const onChangeTab = (tab: 'editor' | 'executions') => {
     setActiveTab(tab)
@@ -648,23 +761,29 @@ export default function ReactFlowCanvas({
     [nodes]
   )
 
-  const handleNodeUpdate = useCallback((nodeId: string, parameters: any, displayName: string) => {
-    setNodes((prevNodes) =>
-      prevNodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                parameters,
-                displayName,
-                isSelected: false,
-              },
-            }
-          : node
+  const handleNodeUpdate = useCallback(
+    (nodeId: string, parameters: any, displayName: string) => {
+      markDirty()
+      console.log('makedirty')
+
+      setNodes((prevNodes) =>
+        prevNodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  parameters,
+                  displayName,
+                  isSelected: false,
+                },
+              }
+            : node
+        )
       )
-    )
-  }, [])
+    },
+    [markDirty]
+  )
 
   const handleConfigurationClose = useCallback(() => {
     setNodes((prevNodes) =>
@@ -735,12 +854,15 @@ export default function ReactFlowCanvas({
             value={workflowPayload?.name}
             aria-label="Workflow name"
             readOnly={isExecution}
-            onChange={(e) =>
+            onChange={(e) => {
+              if (!isExecution) {
+                markDirty()
+              }
               setWorkflowPayload({
                 ...workflowPayload,
                 name: e.target.value || '',
               })
-            }
+            }}
             onBlur={() => {}}
             className="w-full border-none border-transparent bg-transparent text-lg! font-semibold
               outline-hidden focus-visible:outline-0 focus-visible:ring-0 truncate"
@@ -776,8 +898,8 @@ export default function ReactFlowCanvas({
           <Button
             onClick={() => onSaveWorkflow({ isExecution: false })}
             className="ml-3"
-            disabled={nodes.length <= 1 || fetcher.state === 'submitting' || isExecution}>
-            {fetcher.state === 'submitting' ? 'Saving...' : 'Save'}
+            disabled={nodes.length <= 1 || isSaving || isExecution}>
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </div>
@@ -802,17 +924,19 @@ export default function ReactFlowCanvas({
         className={cn(
           'absolute bottom-10 left-[44%]',
           nodes.length === 1 || isExecution ? 'hidden' : 'block',
-          fetcher.state === 'submitting' && isExecuting && 'left-[40%]'
+          isSaving && isExecuting && 'left-[40%]'
         )}>
         <Button
           onClick={() =>
-            params?.workflow_id ? onExecuteWorkflow() : onSaveWorkflow({ isExecution: true })
+            params?.workflow_id
+              ? onExecuteWorkflow()
+              : onSaveWorkflow({ isExecution: true, shouldRedirect: true })
           }
-          disabled={fetcher.state === 'submitting'}>
+          disabled={isSaving}>
           <FlaskConical />
           <span>
             {/* cek if user on new page and click execute button, show 'Save and Executing Workflow' */}
-            {fetcher.state === 'submitting' && !params?.workflow_id && isExecuting
+            {isSaving && !params?.workflow_id && isExecuting
               ? 'Save and Executing Workflow'
               : 'Execute Workflow'}
           </span>
@@ -837,3 +961,9 @@ export default function ReactFlowCanvas({
     </div>
   )
 }
+
+const ReactFlowCanvas = forwardRef(ReactFlowCanvasInner)
+
+ReactFlowCanvas.displayName = 'ReactFlowCanvas'
+
+export default ReactFlowCanvas
