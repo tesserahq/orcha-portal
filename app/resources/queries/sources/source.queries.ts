@@ -83,4 +83,3 @@ export async function deleteSource(config: IQueryConfig, id: string): Promise<vo
     method: 'DELETE',
   })
 }
-
