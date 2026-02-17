@@ -5,16 +5,18 @@ import DialogPreviewJson from '@/components/json/preview'
 import { Button } from '@shadcn/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
 import { useApp } from '@/context/AppContext'
-import { useHandleApiError } from '@/hooks/useHandleApiError'
-import { fetchApi } from '@/libraries/fetch'
-import { IEvent } from '@/types/event'
-import { IPaging } from '@/resources/types'
+import DeleteConfirmation, {
+  type DeleteConfirmationHandle,
+} from '@/components/delete-confirmation/delete-confirmation'
+import { NodeENVType } from '@/libraries/fetch'
+import { useDeleteEvent, useEvents } from '@/resources/hooks/events/use-events'
+import { EventType } from '@/resources/queries/events/event.type'
 import { ensureCanonicalPagination } from '@/utils/pagination.server'
 import { useLoaderData, useNavigate } from 'react-router'
 import { LoaderFunctionArgs } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Edit, Ellipsis, EyeIcon, FileJson, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Ellipsis, EyeIcon, FileJson, Trash2 } from 'lucide-react'
+import { useCallback, useMemo, useRef } from 'react'
 import { DateTime } from '@/components/datetime'
 
 export function loader({ request }: LoaderFunctionArgs) {
@@ -32,44 +34,49 @@ export function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function EventsIndex() {
-  const { apiUrl, nodeEnv, size, page } = useLoaderData<typeof loader>()
+  const { apiUrl, nodeEnv, size, page } = useLoaderData() as {
+    apiUrl: string
+    nodeEnv: NodeENVType
+    size: number
+    page: number
+  }
   const { token, isLoading: appLoading } = useApp()
-  const handleApiError = useHandleApiError()
   const navigate = useNavigate()
   const dialogRef = useRef<React.ElementRef<typeof DialogPreviewJson>>(null)
+  const deleteConfirmationRef = useRef<DeleteConfirmationHandle>(null)
 
-  const [events, setEvents] = useState<IPaging<IEvent>>()
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [firstLoading, setFirstLoading] = useState<boolean>(true)
+  const config = {
+    apiUrl: apiUrl!,
+    token: token!,
+    nodeEnv,
+  }
 
-  const fetchEvents = useCallback(async () => {
-    if (!token || !apiUrl) {
-      setFirstLoading(false)
-      return
-    }
+  const { data, isLoading, error } = useEvents(config, { page, size }, { enabled: !!token })
 
-    setIsLoading(true)
-    try {
-      const response = (await fetchApi(`${apiUrl}/events`, token, nodeEnv, {
-        pagination: { page, size },
-      })) as IPaging<IEvent>
+  const { mutateAsync: deleteEvent } = useDeleteEvent(config, {
+    onSuccess: () => {
+      deleteConfirmationRef.current?.close()
+    },
+    onError: () => {
+      deleteConfirmationRef.current?.updateConfig({ isLoading: false })
+    },
+  })
 
-      setEvents(response)
-    } catch (error) {
-      handleApiError(error)
-    } finally {
-      setIsLoading(false)
-      setFirstLoading(false)
-    }
-  }, [token, apiUrl, nodeEnv, page, size, handleApiError])
+  const handleDeleteClick = useCallback(
+    (event: EventType) => {
+      deleteConfirmationRef.current?.open({
+        title: 'Remove Event',
+        description: `This will remove this event. This action cannot be undone.`,
+        onDelete: async () => {
+          deleteConfirmationRef.current?.updateConfig({ isLoading: true })
+          await deleteEvent(event.id)
+        },
+      })
+    },
+    [deleteEvent]
+  )
 
-  useEffect(() => {
-    if (token) {
-      fetchEvents()
-    }
-  }, [token, fetchEvents])
-
-  const columns = useMemo<ColumnDef<IEvent>[]>(
+  const columns = useMemo<ColumnDef<EventType>[]>(
     () => [
       {
         accessorKey: 'event_type',
@@ -135,28 +142,16 @@ export default function EventsIndex() {
                 </Button>
                 <Button
                   variant="ghost"
-                  disabled
-                  className="hidden w-full justify-start gap-2"
-                  onClick={() => navigate(`/sources/${id}`)}>
+                  className="flex w-full justify-start gap-2"
+                  onClick={() => navigate(`/events/${id}`)}>
                   <EyeIcon size={18} />
                   <span>View</span>
                 </Button>
                 <Button
                   variant="ghost"
-                  disabled
-                  className="hidden w-full justify-start gap-2"
-                  onClick={() => {
-                    navigate(`/sources/${id}/edit`)
-                  }}>
-                  <Edit size={18} />
-                  <span>Edit</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled
-                  className="hidden w-full justify-start gap-2 hover:bg-destructive
+                  className="flex w-full justify-start gap-2 hover:bg-destructive
                     hover:text-destructive-foreground"
-                  onClick={() => {}}>
+                  onClick={() => handleDeleteClick(row.original)}>
                   <Trash2 size={18} />
                   <span>Delete</span>
                 </Button>
@@ -166,10 +161,20 @@ export default function EventsIndex() {
         },
       },
     ],
-    []
+    [handleDeleteClick, navigate]
   )
 
-  if (appLoading || firstLoading) return <AppPreloader />
+  if (appLoading || isLoading) return <AppPreloader />
+
+  if (error) {
+    return (
+      <EmptyContent
+        title="Failed to get events"
+        description={error.message}
+        image="/images/empty-events.png"
+      />
+    )
+  }
 
   return (
     <div className="animate-slide-up">
@@ -177,7 +182,7 @@ export default function EventsIndex() {
         <h1 className="text-2xl font-semibold">Events</h1>
       </div>
 
-      {!isLoading && events?.items?.length === 0 && (
+      {!isLoading && data?.items?.length === 0 && (
         <EmptyContent
           title="No events found"
           description="Events will appear here when they are created"
@@ -185,21 +190,22 @@ export default function EventsIndex() {
         />
       )}
 
-      {events?.items && events?.items?.length > 0 && (
+      {data?.items && data?.items?.length > 0 && (
         <DataTable
           columns={columns}
-          data={events?.items}
+          data={data?.items}
           meta={{
-            page: events?.page || 1,
-            size: events?.size || 25,
-            total: events?.total || 0,
-            pages: events?.pages || 1,
+            page: data?.page || 1,
+            size: data?.size || 25,
+            total: data?.total || 0,
+            pages: data?.pages || 1,
           }}
           isLoading={isLoading}
         />
       )}
 
       <DialogPreviewJson ref={dialogRef} title="Event Data" />
+      <DeleteConfirmation ref={deleteConfirmationRef} />
     </div>
   )
 }

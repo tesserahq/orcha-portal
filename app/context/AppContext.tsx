@@ -71,7 +71,7 @@ export const useApp = (): IContextProps => {
   const context = React.useContext(AppContext)
 
   if (!context) {
-    throw new Error('useCoreUI must be used within an IdentiesProvider')
+    throw new Error('useApp must be used within an IdentiesProvider')
   }
 
   return context

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@source '../../node_modules/tessera-ui/src/**/*.{js,jsx,ts,tsx}';
 
 @custom-variant dark (&:is(.dark *));
 

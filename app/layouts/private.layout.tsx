@@ -1,63 +1,115 @@
 import { AppPreloader } from '@/components/loader/pre-loader'
-import { Header, SidebarPanel, SidebarPanelMin, type IMenuItemProps } from '@/components/layouts'
+import { SITE_CONFIG } from '@/constants/brand'
 import { useApp } from '@/context/AppContext'
-import '@/styles/sidebar.css'
+import { useRequestInfo } from '@/hooks/useRequestInfo'
+import { ROUTE_PATH as THEME_PATH } from '@/routes/resources/update-theme'
 import { cn } from '@shadcn/lib/utils'
-import { Outlet, useLoaderData, useLocation, useParams } from 'react-router'
 import { CalendarCog, CodeSquare, Workflow } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useMemo } from 'react'
+import { Outlet, useLoaderData, useLocation, useNavigate, useParams, useSubmit } from 'react-router'
+import { Layout, MainItemProps, TesseraProvider } from 'tessera-ui'
 
 export function loader() {
-  const hostUrl = process.env.HOST_URL
-  const apiUrl = process.env.API_URL
-  const nodeEnv = process.env.NODE_ENV
+  const identiesApiUrl = process.env.IDENTIES_API_URL || process.env.API_URL
+  // app host urls
+  const quoreHostUrl = process.env.QUORE_HOST_URL
+  const looplyHostUrl = process.env.LOOPLY_HOST_URL
+  const vaultaHostUrl = process.env.VAULTA_HOST_URL
+  const identiesHostUrl = process.env.IDENTIES_HOST_URL
+  const orchaHostUrl = process.env.ORCHA_HOST_URL || process.env.HOST_URL
+  const custosHostUrl = process.env.CUSTOS_HOST_URL
+  const indexaHostUrl = process.env.INDEXA_HOST_URL
+  const sendlyHostUrl = process.env.SENDLY_HOST_URL
 
-  return { hostUrl, apiUrl, nodeEnv }
+  return {
+    identiesApiUrl,
+    quoreHostUrl,
+    looplyHostUrl,
+    vaultaHostUrl,
+    identiesHostUrl,
+    orchaHostUrl,
+    custosHostUrl,
+    indexaHostUrl,
+    sendlyHostUrl,
+  }
 }
 
-export default function Layout() {
-  const { hostUrl, apiUrl, nodeEnv } = useLoaderData<typeof loader>()
-  const [isExpanded, setIsExpanded] = useState(true)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const { isLoading } = useApp()
+export default function PrivateLayout() {
+  const {
+    identiesApiUrl,
+    quoreHostUrl,
+    looplyHostUrl,
+    vaultaHostUrl,
+    identiesHostUrl,
+    orchaHostUrl,
+    custosHostUrl,
+    indexaHostUrl,
+    sendlyHostUrl,
+  } = useLoaderData<typeof loader>()
+
+  const { isLoading, token, user } = useApp()
+  const requestInfo = useRequestInfo()
+  const submit = useSubmit()
+  const navigate = useNavigate()
   const params = useParams()
   const location = useLocation()
 
-  const menuItems: IMenuItemProps[] = [
+  const onSetTheme = (theme: string) => {
+    submit(
+      { theme },
+      {
+        method: 'POST',
+        action: THEME_PATH,
+        navigate: false,
+        fetcherKey: 'theme-fetcher',
+      }
+    )
+  }
+
+  const menuItems: MainItemProps[] = [
     {
       title: 'Workflows',
       path: '/workflows',
-      icon: <Workflow size={18} />,
+      icon: Workflow,
     },
     {
       title: 'Sources',
       path: `/sources`,
-      icon: <CodeSquare size={18} />,
+      icon: CodeSquare,
     },
     {
       title: 'Events',
       path: '/events',
-      icon: <CalendarCog size={18} />,
+      icon: CalendarCog,
     },
   ]
 
-  const onResize = useCallback(() => {
-    if (containerRef.current) {
-      if (containerRef.current.offsetWidth <= 1280) {
-        setIsExpanded(false)
-      }
-    }
-  }, [])
+  const isWorkflowCanvasPage = useMemo(() => {
+    return Boolean(params.workflow_id) || location.pathname === '/workflows/new'
+  }, [params.workflow_id, location.pathname])
 
-  useEffect(() => {
-    onResize()
-
-    window.addEventListener('resize', onResize)
-
-    return () => {
-      window.removeEventListener('resize', onResize)
-    }
-  }, [onResize])
+  const appHostUrls = useMemo(
+    () => ({
+      quore: quoreHostUrl ?? '',
+      looply: looplyHostUrl ?? '',
+      vaulta: vaultaHostUrl ?? '',
+      identies: identiesHostUrl ?? '',
+      orcha: orchaHostUrl ?? '',
+      custos: custosHostUrl ?? '',
+      indexa: indexaHostUrl ?? '',
+      sendly: sendlyHostUrl ?? '',
+    }),
+    [
+      quoreHostUrl,
+      looplyHostUrl,
+      vaultaHostUrl,
+      identiesHostUrl,
+      orchaHostUrl,
+      custosHostUrl,
+      indexaHostUrl,
+      sendlyHostUrl,
+    ]
+  )
 
   if (isLoading) {
     // Display loading screen when auth0 isLoading true
@@ -65,38 +117,28 @@ export default function Layout() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className={cn('has-min-sidebar is-header-blur', isExpanded && 'is-sidebar-open')}>
-      <div id="root" className="min-h-100vh flex grow">
-        <div className="sidebar print:hidden">
-          <SidebarPanel menuItems={menuItems} />
-          <SidebarPanelMin menuItems={menuItems} />
-        </div>
-
-        <Header
-          withSidebar
-          apiUrl={apiUrl!}
-          nodeEnv={nodeEnv}
-          hostUrl={hostUrl}
-          isExpanded={isExpanded}
-          setIsExpanded={setIsExpanded}
+    <TesseraProvider identiesApiUrl={identiesApiUrl!} token={token ?? ''}>
+      <Layout.Main menuItems={menuItems}>
+        <Layout.Header
+          appHostUrls={appHostUrls}
+          actionLogout={() => navigate('/logout')}
+          actionProfile={() => {}}
+          defaultAvatar={user?.avatar_url ?? ''}
+          onSetTheme={onSetTheme}
+          selectedTheme={requestInfo.userPrefs.theme || 'system'}
+          title={SITE_CONFIG.siteTitle}
         />
-
-        <main
-          className={cn(
-            'main-content w-full',
-            (params.workflow_id || location.pathname === '/workflows/new') && 'p-0!'
-          )}>
+        <Outlet />
+        {/* <main className={cn('w-full', isWorkflowCanvasPage && 'p-0')}>
           <div
             className={cn(
               'mx-auto h-full w-full max-w-(--breakpoint-2xl)',
-              (params.workflow_id || location.pathname === '/workflows/new') && 'max-w-full'
+              isWorkflowCanvasPage && 'max-w-full'
             )}>
             <Outlet />
           </div>
-        </main>
-      </div>
-    </div>
+        </main> */}
+      </Layout.Main>
+    </TesseraProvider>
   )
 }

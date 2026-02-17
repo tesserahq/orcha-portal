@@ -38,20 +38,28 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { ProgressBar } from './components/loader/progress-bar'
 import { AppProvider } from './context/AppContext'
 import { ReactQueryProvider } from './modules/react-query'
+import { metaObject } from './utils/helpers/meta.helpers'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 library.add(fas as any)
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
-  return [
-    {
-      title: data ? `${SITE_CONFIG.siteTitle}` : `Error | ${SITE_CONFIG.siteTitle}`,
-    },
-    {
-      name: 'description',
-      content: SITE_CONFIG.siteDescription,
-    },
-  ]
+export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
+  // Get the current page title from the pathname
+  const getPageTitle = () => {
+    const path = location.pathname
+    // Remove leading slash and convert to title case
+    if (path === '/') return 'Home'
+
+    const pageName = path.split('/').pop() || ''
+    return pageName
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  const pageTitle = getPageTitle()
+
+  return metaObject(data ? pageTitle : 'Error')
 }
 
 export const links: LinksFunction = () => {
