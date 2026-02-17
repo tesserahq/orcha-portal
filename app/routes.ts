@@ -30,6 +30,9 @@ export default [
     ]),
     route('events', 'routes/main/events/layout.tsx', [
       index('routes/main/events/index.tsx', { id: 'events' }),
+      route(':event_id', 'routes/main/events/detail.tsx', {
+        id: 'events-detail',
+      }),
     ]),
   ]),
   // Logout Route

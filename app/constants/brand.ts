@@ -3,7 +3,7 @@
  * Add your brand details here.
  */
 export const SITE_CONFIG = {
-  siteTitle: 'Orcha Portal',
+  siteTitle: 'Orcha',
   siteDescription: '',
   siteUrl: '',
   siteImage: '/images/logo.png',

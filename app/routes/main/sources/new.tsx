@@ -1,28 +1,43 @@
 import { useApp } from '@/context/AppContext'
-import { fetchApi } from '@/libraries/fetch'
 import { sourceSchema } from '@/schemas/source'
-import { redirectWithToast } from '@/utils/toast.server'
-import { useNavigate, useNavigation, useSubmit } from 'react-router'
-import { ActionFunctionArgs } from 'react-router'
+import { NodeENVType } from '@/libraries/fetch'
+import { useCreateSource } from '@/resources/hooks/sources/use-sources'
+import { LoaderFunctionArgs, useLoaderData, useNavigate, useNavigation } from 'react-router'
 import { SourceForm } from '@/components/sources'
 import { z } from 'zod'
 
+export function loader({}: LoaderFunctionArgs) {
+  const apiUrl = process.env.API_URL
+  const nodeEnv = process.env.NODE_ENV
+
+  return { apiUrl, nodeEnv }
+}
+
 export default function SourcesNew() {
+  const { apiUrl, nodeEnv } = useLoaderData() as { apiUrl: string; nodeEnv: NodeENVType }
   const navigation = useNavigation()
   const navigate = useNavigate()
-  const submit = useSubmit()
   const { token } = useApp()
   const isSubmitting = navigation.state === 'submitting'
 
-  const handleSubmit = (values: z.infer<typeof sourceSchema>) => {
-    const formData = new FormData()
-    formData.append('token', token!)
-    formData.append('name', values.name)
-    formData.append('identifier', values.identifier || '')
-    if (values.description) {
-      formData.append('description', values.description)
-    }
-    submit(formData, { method: 'POST' })
+  const config = {
+    apiUrl: apiUrl!,
+    token: token!,
+    nodeEnv,
+  }
+
+  const { mutateAsync: createSource, isPending } = useCreateSource(config, {
+    onSuccess: () => {
+      navigate('/sources')
+    },
+  })
+
+  const handleSubmit = async (values: z.infer<typeof sourceSchema>) => {
+    await createSource({
+      name: values.name,
+      identifier: values.identifier || '',
+      description: values.description || '',
+    })
   }
 
   const handleCancel = () => {
@@ -34,47 +49,8 @@ export default function SourcesNew() {
       title="New Source"
       onSubmit={handleSubmit}
       onCancel={handleCancel}
-      isSubmitting={isSubmitting}
+      isSubmitting={isSubmitting || isPending}
       submitLabel="Create Source"
     />
   )
-}
-
-export async function action({ request }: ActionFunctionArgs) {
-  const apiUrl = process.env.API_URL
-  const nodeEnv = process.env.NODE_ENV
-  const formData = await request.formData()
-  const { token, name, identifier, description } = Object.fromEntries(formData)
-
-  const validated = sourceSchema.safeParse({
-    name,
-    description,
-    identifier,
-  })
-
-  if (!validated.success) {
-    return Response.json({ errors: validated.error.flatten().fieldErrors })
-  }
-
-  try {
-    await fetchApi(`${apiUrl}/sources`, token as string, nodeEnv, {
-      method: 'POST',
-      body: JSON.stringify(validated.data),
-    })
-
-    return redirectWithToast('/sources', {
-      type: 'success',
-      title: 'Success',
-      description: 'Source created successfully',
-    })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    const convertError = JSON.parse(error?.message)
-
-    return redirectWithToast('/contact-lists/new', {
-      type: 'error',
-      title: 'Error',
-      description: `${convertError.status} - ${convertError.error}`,
-    })
-  }
 }
