@@ -6,7 +6,7 @@
       "name": "chroma",
       "dependencies": {
         "@auth0/auth0-react": "^2.3.0",
-        "@conform-to/react": "1.16.0",
+        "@conform-to/react": "1.17.1",
         "@conform-to/zod": "1.17.1",
         "@epic-web/client-hints": "^1.3.5",
         "@oslojs/crypto": "^1.0.1",
@@ -200,9 +200,9 @@
 
     "@babel/types": ["@babel/types@7.28.4", "", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.27.1" } }, "sha512-bkFqkLhh3pMBUQQkpVgWDWq/lqzc2678eUyDlTBhRqhCHFguYYGM0Efga7tYk4TogG/3x0EEl66/OQ+WGbWB/Q=="],
 
-    "@conform-to/dom": ["@conform-to/dom@1.16.0", "", {}, "sha512-KkURoALYztq5kli8/Ojqe4PyTcAmc9pHOmIoU5RJzre8poWgmjCsHQt28xhEyDk5XBwo8bkvyKm8oKqwSAAucw=="],
+    "@conform-to/dom": ["@conform-to/dom@1.17.1", "", {}, "sha512-vpwCodVVWpQ6kbrlu5F85BC99ozDxqcrhmt+YDD81bCwvt6NtiycFID3NQQGQyn+bzmpb4qlF3Ay9YcljnrNHw=="],
 
-    "@conform-to/react": ["@conform-to/react@1.16.0", "", { "dependencies": { "@conform-to/dom": "1.16.0" }, "peerDependencies": { "react": ">=18" } }, "sha512-xDPwDCijAMTcQcDD2fgGh76KIOsx8xEbPGdFTbal7RJyHPA4FYL0v4mBp4jPN5ejKkCOF9mVeb1UbZZ3GiZ/AA=="],
+    "@conform-to/react": ["@conform-to/react@1.17.1", "", { "dependencies": { "@conform-to/dom": "1.17.1" }, "peerDependencies": { "react": ">=18" } }, "sha512-AXj6HMiG0e6mJXzVNDmeQ9FH4LbGA4HdSt+a0Yb09kEnpESkK3zCopFb8RkO8kls4XMQO05KAmaE6KDlhSzprQ=="],
 
     "@conform-to/zod": ["@conform-to/zod@1.17.1", "", { "dependencies": { "@conform-to/dom": "1.17.1" }, "peerDependencies": { "zod": "^3.21.0 || ^4.0.0" } }, "sha512-oFt2OdCrAhNEKjjyc8QAgiykDI9s+RG9nAuxrqGyp/BFXuRPPiu0e+QIVUAxSnWtZ82swtSaf87DI+jTAyhaLg=="],
 
@@ -2011,8 +2011,6 @@
     "@babel/helper-compilation-targets/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
     "@babel/helper-create-class-features-plugin/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
-
-    "@conform-to/zod/@conform-to/dom": ["@conform-to/dom@1.17.1", "", {}, "sha512-vpwCodVVWpQ6kbrlu5F85BC99ozDxqcrhmt+YDD81bCwvt6NtiycFID3NQQGQyn+bzmpb4qlF3Ay9YcljnrNHw=="],
 
     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
 
