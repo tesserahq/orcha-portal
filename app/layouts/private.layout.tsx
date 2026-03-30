@@ -84,7 +84,9 @@ export default function PrivateLayout() {
     },
   ]
 
-  const shouldCollapseSidebar = Boolean(params['workflow_id'] || params['source_id'] || params['event_id']) || location.pathname === '/workflows/new'
+  const shouldCollapseSidebar =
+    Boolean(params['workflow_id'] || params['source_id'] || params['event_id']) ||
+    location.pathname === '/workflows/new'
 
   // const isWorkflowCanvasPage = useMemo(() => {
   //   return Boolean(params.workflow_id) || location.pathname === '/workflows/new'
