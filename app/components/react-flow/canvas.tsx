@@ -28,15 +28,7 @@ import {
   ReactFlow,
 } from '@xyflow/react'
 import { FlaskConical } from 'lucide-react'
-import {
-  Activity,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 export type ReactFlowCanvasHandle = {
