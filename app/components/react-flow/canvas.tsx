@@ -57,6 +57,8 @@ const ReactFlowCanvasInner = (
   const nodeCategoriesRef = useRef<React.ElementRef<typeof NodeCategoriesDrawer>>(null)
   const [edges, setEdges] = useState<Edge[]>(initialEdges)
   const [nodes, setNodes] = useState<Node[]>([])
+  const nodesRef = useRef<Node[]>([])
+  const edgesRef = useRef<Edge[]>(initialEdges)
   const [isExecuting, setIsExecuting] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<'editor' | 'executions'>(
     pathname.includes('executions') ? 'executions' : 'editor'
@@ -113,6 +115,14 @@ const ReactFlowCanvasInner = (
     onDirtyChange?.(isDirty)
   }, [isDirty, onDirtyChange])
 
+  useEffect(() => {
+    nodesRef.current = nodes
+  }, [nodes])
+
+  useEffect(() => {
+    edgesRef.current = edges
+  }, [edges])
+
   const shouldMarkDirtyFromNodes = useCallback((changes: NodeChange<Node>[]) => {
     return changes.some((change) => {
       if (change.type === 'position') {
@@ -154,8 +164,6 @@ const ReactFlowCanvasInner = (
   const onConnect = useCallback(
     (params: Connection) => {
       markDirty()
-      console.log('makedirty onConnect')
-
       const customParams: Edge = {
         ...params,
         id: `${params.source}->${params.target}`,
@@ -187,7 +195,6 @@ const ReactFlowCanvasInner = (
             description: node.description,
             kind: node.kind,
             isExecution: isExecution,
-            properties: node.properties,
             parameters: node.parameters,
             firstNode: node.ui_settings.firstNode,
             icon: node?.ui_settings?.icon,
@@ -428,12 +435,7 @@ const ReactFlowCanvasInner = (
     nodeAddId?: string | undefined
   ) => {
     markDirty()
-    console.log('makedirty onSaveNode')
 
-    let newNodeId = ''
-    let previousNodeId: string | null = null
-    let newWorkflowNode: Node
-    let newAddNodeId: string | null = null
     const placeholderNodeId = nodeAddId ?? 'add'
     const branchLabel = nodeAddId?.endsWith('-add-true')
       ? 'true'
@@ -441,134 +443,133 @@ const ReactFlowCanvasInner = (
         ? 'false'
         : null
 
-    setNodes((prevNodeList) => {
-      const nonInitialNodes = prevNodeList.filter((nodeItem) => nodeItem.type !== 'initial')
-      const actualFlowNodes = nonInitialNodes.filter(
-        (nodeItem) => nodeItem.type !== 'add' && nodeItem.type !== 'addIf'
-      )
-
-      const referenceNodeFromState =
-        currentNode?.id != null
-          ? actualFlowNodes.find((nodeItem) => nodeItem.id === currentNode.id)
-          : undefined
-
-      const fallbackReferenceNode = actualFlowNodes[actualFlowNodes.length - 1]
-      const referenceNode = referenceNodeFromState ?? currentNode ?? fallbackReferenceNode
-      const targetPlaceholder = placeholderNodeId
-        ? nonInitialNodes.find((nodeItem) => nodeItem.id === placeholderNodeId)
+    const nodesSnapshot = nodesRef.current
+    const edgesSnapshot = edgesRef.current
+    const nonInitialNodes = nodesSnapshot.filter((nodeItem) => nodeItem.type !== 'initial')
+    const actualFlowNodes = nonInitialNodes.filter(
+      (nodeItem) => nodeItem.type !== 'add' && nodeItem.type !== 'addIf'
+    )
+    const referenceNodeFromState =
+      currentNode?.id != null
+        ? actualFlowNodes.find((nodeItem) => nodeItem.id === currentNode.id)
         : undefined
-
-      const isNodeIf = node.name === 'if'
-      const defaultX = referenceNode ? referenceNode.position.x + 100 : 0
-      const defaultY = referenceNode ? referenceNode.position.y : 0
-      const nextPositionY =
-        branchLabel != null
-          ? (targetPlaceholder?.position.y ?? defaultY)
-          : (referenceNode?.position.y ?? 0)
-      const nextPosition = {
-        x: targetPlaceholder?.position.x ?? defaultX,
-        y: nextPositionY,
-      }
-
-      newNodeId = `${node.name}-${Date.now()}`
-      previousNodeId = referenceNode?.id ?? null
-
-      newWorkflowNode = {
-        id: newNodeId,
-        type: isNodeIf ? 'if' : 'basic',
-        position: nextPosition,
-        data: {
-          ...(node as INodeInput),
-          firstNode: actualFlowNodes.length === 0,
-          isSelected: true,
-        },
-      }
-
-      const addNode: Node = {
-        id: `${newNodeId}-add`,
-        type: 'add',
+    const fallbackReferenceNode = actualFlowNodes[actualFlowNodes.length - 1]
+    const referenceNode = referenceNodeFromState ?? currentNode ?? fallbackReferenceNode
+    const targetPlaceholder = placeholderNodeId
+      ? nonInitialNodes.find((nodeItem) => nodeItem.id === placeholderNodeId)
+      : undefined
+    const isNodeIf = node.name === 'if'
+    const defaultX = referenceNode ? referenceNode.position.x + 100 : 0
+    const defaultY = referenceNode ? referenceNode.position.y : 0
+    const nextPositionY =
+      branchLabel != null
+        ? (targetPlaceholder?.position.y ?? defaultY)
+        : (referenceNode?.position.y ?? 0)
+    const nextPosition = {
+      x: targetPlaceholder?.position.x ?? defaultX,
+      y: nextPositionY,
+    }
+    const newNodeId = `${node.name}-${Date.now()}`
+    const previousNodeId = referenceNode?.id ?? null
+    const newWorkflowNode: Node = {
+      id: newNodeId,
+      type: isNodeIf ? 'if' : 'basic',
+      position: nextPosition,
+      data: {
+        ...(node as INodeInput),
+        firstNode: actualFlowNodes.length === 0,
+        isSelected: true,
+      },
+    }
+    const addNode: Node = {
+      id: `${newNodeId}-add`,
+      type: 'add',
+      position: {
+        x: newWorkflowNode.position.x + 100,
+        y: newWorkflowNode.position.y + 9,
+      },
+      data: {
+        onAddNode: () => handleOpenAddDialog(newWorkflowNode, `${newNodeId}-add`),
+      },
+    }
+    const addIfNodes: Node[] = [
+      {
+        id: `${newNodeId}-add-true`,
+        type: 'addIf',
         position: {
           x: newWorkflowNode.position.x + 100,
-          y: newWorkflowNode.position.y + 9,
+          y: newWorkflowNode.position.y - 50,
         },
         data: {
-          onAddNode: () => handleOpenAddDialog(newWorkflowNode, `${newNodeId}-add`),
+          onAddNode: () => handleOpenAddDialog(newWorkflowNode, `${newNodeId}-add-true`),
         },
-      }
-      newAddNodeId = addNode.id
-
-      const addIfNodes: Node[] = [
-        {
-          id: `${newNodeId}-add-true`,
-          type: 'addIf',
-          position: {
-            x: newWorkflowNode.position.x + 100,
-            y: newWorkflowNode.position.y - 50,
-          },
-          data: {
-            onAddNode: () => handleOpenAddDialog(newWorkflowNode, `${newNodeId}-add-true`),
-          },
+      },
+      {
+        id: `${newNodeId}-add-false`,
+        type: 'addIf',
+        position: {
+          x: newWorkflowNode.position.x + 100,
+          y: newWorkflowNode.position.y + 50,
         },
-        {
-          id: `${newNodeId}-add-false`,
-          type: 'addIf',
-          position: {
-            x: newWorkflowNode.position.x + 100,
-            y: newWorkflowNode.position.y + 50,
-          },
-          data: {
-            onAddNode: () => handleOpenAddDialog(newWorkflowNode, `${newNodeId}-add-false`),
-          },
+        data: {
+          onAddNode: () => handleOpenAddDialog(newWorkflowNode, `${newNodeId}-add-false`),
         },
-      ]
-
-      const nodesWithoutPlaceholder = nonInitialNodes.filter((nodeItem) => {
-        if (!placeholderNodeId) {
-          return true
-        }
-
-        return nodeItem.id !== placeholderNodeId
-      })
-
-      if (currentNode?.type === 'if') {
-        return [...nodesWithoutPlaceholder, newWorkflowNode, addNode]
+      },
+    ]
+    const nodesWithoutPlaceholder = nonInitialNodes.filter((nodeItem) => {
+      if (!placeholderNodeId) {
+        return true
       }
 
-      if (isNodeIf) {
-        return [...nodesWithoutPlaceholder, newWorkflowNode, ...addIfNodes]
-      }
-
-      configurationNodeRef.current?.onOpen({
-        node: newWorkflowNode,
-        title: newWorkflowNode?.data.displayName as string,
-        description: node.description,
-      })
-
-      return [...nodesWithoutPlaceholder, newWorkflowNode, addNode]
+      return nodeItem.id !== placeholderNodeId
     })
-
-    // this part for edges reactflow
-    setEdges((edgesSnapshot) => {
-      const edgesWithoutPlaceholder = edgesSnapshot.filter((edge) => {
-        if (!placeholderNodeId) {
-          return true
-        }
-
-        return edge.source !== placeholderNodeId && edge.target !== placeholderNodeId
-      })
-
-      if (!previousNodeId) {
-        const firstEdge: Edge = {
-          id: 'first-edge',
-          source: newNodeId,
-          target: newAddNodeId ?? `${newNodeId}-add`,
-        }
-
-        // add edge from initial node to add node
-        return [firstEdge]
+    const nextNodes = isNodeIf
+      ? [...nodesWithoutPlaceholder, newWorkflowNode, ...addIfNodes]
+      : [...nodesWithoutPlaceholder, newWorkflowNode, addNode]
+    const edgesWithoutPlaceholder = edgesSnapshot.filter((edge) => {
+      if (!placeholderNodeId) {
+        return true
       }
 
-      // add edge from previous node to new node
+      return edge.source !== placeholderNodeId && edge.target !== placeholderNodeId
+    })
+    const filteredEdges = edgesWithoutPlaceholder.filter((edge) => edge.id !== 'first-edge')
+    const addEdgeForIfNode: Edge[] = [
+      {
+        id: `${newNodeId}-true->${newNodeId}-add-true`,
+        source: newNodeId,
+        target: `${newNodeId}-add-true`,
+        type: 'label',
+        data: {
+          label: 'true',
+        },
+      },
+      {
+        id: `${newNodeId}-false->${newNodeId}-add-false`,
+        source: newNodeId,
+        target: `${newNodeId}-add-false`,
+        type: 'label',
+        data: {
+          label: 'false',
+        },
+      },
+    ]
+
+    const nextEdges = (() => {
+      if (!previousNodeId) {
+        if (isNodeIf) {
+          return addEdgeForIfNode
+        }
+
+        return [
+          {
+            id: 'first-edge',
+            source: newNodeId,
+            target: addNode.id,
+          },
+        ]
+      }
+
       const connectingEdgeBase: Edge = {
         id: `${previousNodeId}->${newNodeId}`,
         source: previousNodeId,
@@ -585,42 +586,33 @@ const ReactFlowCanvasInner = (
             }
           : connectingEdgeBase
 
-      // add edge from new node to add node
-      const addEdgeForNewNode: Edge = {
-        id: `${newNodeId}->${newAddNodeId ?? `${newNodeId}-add`}`,
-        source: newNodeId,
-        target: newAddNodeId ?? `${newNodeId}-add`,
-      }
-
-      const addEdgeForIfNode: Edge[] = [
-        {
-          id: `${newNodeId}-true->${previousNodeId}`,
-          source: newNodeId,
-          target: `${newNodeId}-add-true`,
-          type: 'label',
-          data: {
-            label: 'true',
-          },
-        },
-        {
-          id: `${newNodeId}-false->${previousNodeId}`,
-          source: newNodeId,
-          target: `${newNodeId}-add-false`,
-          type: 'label',
-          data: {
-            label: 'false',
-          },
-        },
-      ] as Edge[]
-
-      const filteredEdges = edgesWithoutPlaceholder.filter((edge) => edge.id !== 'first-edge')
-
-      if (newWorkflowNode.type === 'if') {
+      if (isNodeIf) {
         return [...filteredEdges, connectingEdge, ...addEdgeForIfNode]
       }
 
-      return [...filteredEdges, connectingEdge, addEdgeForNewNode]
-    })
+      return [
+        ...filteredEdges,
+        connectingEdge,
+        {
+          id: `${newNodeId}->${addNode.id}`,
+          source: newNodeId,
+          target: addNode.id,
+        },
+      ]
+    })()
+
+    nodesRef.current = nextNodes
+    edgesRef.current = nextEdges
+    setNodes(nextNodes)
+    setEdges(nextEdges)
+
+    if (!isNodeIf) {
+      configurationNodeRef.current?.onOpen({
+        node: newWorkflowNode,
+        title: newWorkflowNode?.data.displayName as string,
+        description: node.description,
+      })
+    }
 
     nodeCategoriesRef.current?.onClose()
   }
@@ -661,7 +653,6 @@ const ReactFlowCanvasInner = (
             description: node.data.description,
             kind: node.data.kind,
             parameters: node.data.parameters,
-            properties: node.data.properties,
             ui_settings: {
               icon: node.data.icon, //(node?.data as any)?.ui_settings?.icon as string,
               displayName: node.data.displayName, //(node?.data as any)?.ui_settings?.displayName as string,
