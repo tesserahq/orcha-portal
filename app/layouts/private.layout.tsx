@@ -84,32 +84,11 @@ export default function PrivateLayout() {
     },
   ]
 
-  const isWorkflowCanvasPage = useMemo(() => {
-    return Boolean(params.workflow_id) || location.pathname === '/workflows/new'
-  }, [params.workflow_id, location.pathname])
+  const shouldCollapseSidebar = Boolean(params['workflow_id'] || params['source_id'] || params['event_id']) || location.pathname === '/workflows/new'
 
-  const appHostUrls = useMemo(
-    () => ({
-      quore: quoreHostUrl ?? '',
-      looply: looplyHostUrl ?? '',
-      vaulta: vaultaHostUrl ?? '',
-      identies: identiesHostUrl ?? '',
-      orcha: orchaHostUrl ?? '',
-      custos: custosHostUrl ?? '',
-      indexa: indexaHostUrl ?? '',
-      sendly: sendlyHostUrl ?? '',
-    }),
-    [
-      quoreHostUrl,
-      looplyHostUrl,
-      vaultaHostUrl,
-      identiesHostUrl,
-      orchaHostUrl,
-      custosHostUrl,
-      indexaHostUrl,
-      sendlyHostUrl,
-    ]
-  )
+  // const isWorkflowCanvasPage = useMemo(() => {
+  //   return Boolean(params.workflow_id) || location.pathname === '/workflows/new'
+  // }, [params.workflow_id, location.pathname])
 
   if (isLoading) {
     // Display loading screen when auth0 isLoading true
@@ -118,13 +97,12 @@ export default function PrivateLayout() {
 
   return (
     <TesseraProvider identiesApiUrl={identiesApiUrl!} token={token ?? ''}>
-      <Layout.Main menuItems={menuItems}>
+      <Layout.Main menuItems={menuItems} collapseSidebar={shouldCollapseSidebar}>
         <Layout.Header
-          appHostUrls={appHostUrls}
-          actionLogout={() => navigate('/logout')}
+          actionLogout={() => {}}
           actionProfile={() => {}}
-          defaultAvatar={user?.avatar_url ?? ''}
-          onSetTheme={onSetTheme}
+          defaultLogo="/images/logo.png"
+          onSetTheme={(theme) => onSetTheme(theme)}
           selectedTheme={requestInfo.userPrefs.theme || 'system'}
           title={SITE_CONFIG.siteTitle}
         />

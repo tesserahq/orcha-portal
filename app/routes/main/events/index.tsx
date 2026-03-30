@@ -177,7 +177,7 @@ export default function EventsIndex() {
   }
 
   return (
-    <div className="animate-slide-up">
+    <div className="animate-slide-up page-content">
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Events</h1>
       </div>

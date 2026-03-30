@@ -530,6 +530,10 @@ nav.header .header-container {
   @apply dark:text-foreground text-[1.85rem] font-bold;
 }
 
+.page-content {
+  @apply animate-slide-up mx-auto max-w-screen-2xl px-8 pt-5;
+}
+
 .shadow-card {
   box-shadow: rgba(145, 145, 145, 0.1) 0px 4px 12px;
   border: none;
