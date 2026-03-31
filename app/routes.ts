@@ -21,18 +21,24 @@ export default [
     route('sources', 'routes/main/sources/layout.tsx', [
       index('routes/main/sources/index.tsx', { id: 'sources' }),
       route('new', 'routes/main/sources/new.tsx', { id: 'sources-new' }),
-      route(':source_id', 'routes/main/sources/detail.tsx', {
-        id: 'sources-detail',
-      }),
+      route(':source_id', 'routes/main/sources/detail/layout.tsx', [
+        index('routes/main/sources/detail/index.tsx', { id: 'sources-detail' }),
+        route('overview', 'routes/main/sources/detail/overview.tsx', {
+          id: 'sources-detail-overview',
+        }),
+      ]),
       route(':source_id/edit', 'routes/main/sources/edit.tsx', {
         id: 'sources-edit',
       }),
     ]),
     route('events', 'routes/main/events/layout.tsx', [
       index('routes/main/events/index.tsx', { id: 'events' }),
-      route(':event_id', 'routes/main/events/detail.tsx', {
-        id: 'events-detail',
-      }),
+      route(':eventID', 'routes/main/events/detail/layout.tsx', [
+        index('routes/main/events/detail/index.tsx', { id: 'events-detail' }),
+        route('overview', 'routes/main/events/detail/overview.tsx', {
+          id: 'events-detail-overview',
+        }),
+      ]),
     ]),
   ]),
   // Logout Route

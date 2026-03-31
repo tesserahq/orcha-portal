@@ -111,7 +111,7 @@ const CodeBlock = ({ children, className, language, ...restProps }: CodeBlockPro
   )
 
   return (
-    <div className="group/code relative mb-4">
+    <div className="group/code relative">
       <Suspense
         fallback={
           <pre className={preClass} {...restProps}>
