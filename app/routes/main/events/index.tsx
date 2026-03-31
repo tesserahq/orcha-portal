@@ -12,12 +12,12 @@ import { NodeENVType } from '@/libraries/fetch'
 import { useDeleteEvent, useEvents } from '@/resources/hooks/events/use-events'
 import { EventType } from '@/resources/queries/events/event.type'
 import { ensureCanonicalPagination } from '@/utils/pagination.server'
-import { useLoaderData, useNavigate } from 'react-router'
+import { Link, useLoaderData, useNavigate } from 'react-router'
 import { LoaderFunctionArgs } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Ellipsis, EyeIcon, FileJson, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useRef } from 'react'
-import { DateTime } from '@/components/datetime'
+import { DateTime } from 'tessera-ui'
 
 export function loader({ request }: LoaderFunctionArgs) {
   const canonical = ensureCanonicalPagination(request, {
@@ -83,7 +83,11 @@ export default function EventsIndex() {
         header: 'Event Type',
         size: 200,
         cell: ({ row }) => {
-          return <span className="text-sm font-medium">{row.original.event_type}</span>
+          return (
+            <Link to={`/events/${row.original.id}/overview`} className="button-link">
+              <span className="text-sm font-medium">{row.original.event_type}</span>
+            </Link>
+          )
         },
       },
       {
@@ -136,14 +140,14 @@ export default function EventsIndex() {
                 <Button
                   variant="ghost"
                   className="flex w-full justify-start gap-2"
-                  onClick={() => dialogRef.current?.onOpen(row.original.event_data)}>
+                  onClick={() => navigate(`/events/${id}/overview`)}>
                   <FileJson size={18} />
                   <span>View Data</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="flex w-full justify-start gap-2"
-                  onClick={() => navigate(`/events/${id}`)}>
+                  onClick={() => navigate(`/events/${id}/overview`)}>
                   <EyeIcon size={18} />
                   <span>View</span>
                 </Button>

@@ -53,8 +53,9 @@ export default function PrivateLayout() {
   ]
 
   const shouldCollapseSidebar =
-    Boolean(params['workflow_id'] || params['source_id'] || params['event_id']) ||
-    location.pathname === '/workflows/new'
+    Boolean(params['workflow_id'] || params['source_id'] || params['eventID']) ||
+    location.pathname === '/workflows/new' ||
+    location.pathname === '/sources/new'
 
   if (isLoading) {
     // Display loading screen when auth0 isLoading true

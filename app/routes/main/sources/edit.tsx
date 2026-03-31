@@ -12,7 +12,7 @@ export function loader({ params }: LoaderFunctionArgs) {
   const apiUrl = process.env.API_URL
   const nodeEnv = process.env.NODE_ENV
 
-  return { apiUrl, nodeEnv, id: params.id }
+  return { apiUrl, nodeEnv, id: params.source_id }
 }
 
 export default function SourcesEdit() {

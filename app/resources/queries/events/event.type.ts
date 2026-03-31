@@ -14,4 +14,6 @@ export type EventType = {
   user_id: string
   created_at: string
   updated_at: string
+  labels: Record<string, unknown>
+  subject: string
 }

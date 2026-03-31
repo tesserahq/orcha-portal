@@ -39,6 +39,18 @@ interface IProps {
   onClose?: () => void
 }
 
+const getFallbackPropertiesFromParameters = (
+  parameters: Record<string, any> = {}
+): INodeProperty[] => {
+  return Object.entries(parameters).map(([name, value]) => ({
+    name,
+    display_name: name.replace(/_/g, ' '),
+    type: value !== null && typeof value === 'object' ? 'json' : 'string',
+    default: value as never,
+    description: '',
+  }))
+}
+
 const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
   { apiUrl, nodeEnv, callback, onDelete, onClose }: IProps,
   ref
@@ -66,6 +78,8 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
 
   useImperativeHandle(ref, () => ({
     onOpen(args: ParamProps) {
+      console.log('args ', args)
+
       setOpen(true)
       setNodeData(args)
       setDisplayName(args.title)
@@ -121,6 +135,14 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
     }
   }
 
+  const nodeProperties = (nodeData?.node.data?.properties as INodeProperty[]) || []
+  const properties =
+    nodeProperties.length > 0
+      ? nodeProperties
+      : getFallbackPropertiesFromParameters(
+          (nodeData?.node.data?.parameters as Record<string, any>) || {}
+        )
+
   return (
     <div
       className={cn(
@@ -169,20 +191,18 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
 
         {/* Content */}
         <div className="mt-2 flex-1 px-5">
-          {((nodeData?.node.data?.properties as INodeProperty[]) || []).map(
-            (property: INodeProperty) => {
-              return (
-                <NodeProperty
-                  key={property.name}
-                  property={property}
-                  parameter={parameters}
-                  onChange={onChangeParameters}
-                  eventTypes={eventTypes || []}
-                  isLoading={isLoading}
-                />
-              )
-            }
-          )}
+          {properties.map((property: INodeProperty) => {
+            return (
+              <NodeProperty
+                key={property.name}
+                property={property}
+                parameter={parameters}
+                onChange={onChangeParameters}
+                eventTypes={eventTypes || []}
+                isLoading={isLoading}
+              />
+            )
+          })}
         </div>
 
         {/* Footer */}
