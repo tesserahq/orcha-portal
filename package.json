@@ -100,6 +100,7 @@
     "@fortawesome/react-fontawesome": "^3.0.2",
     "@react-router/dev": "^7.0.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/vite": "^4.1.18",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/compression": "^1.7.5",
     "@types/eslint-plugin-jsx-a11y": "^6.10.1",
