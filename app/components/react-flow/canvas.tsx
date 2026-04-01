@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NodeCategoriesDrawer, NodePropertyDrawer } from '@/components/react-flow/drawer'
+import { WorkflowCreatedBy } from '@/components/workflows/workflow-created-by'
 import { NodeAdd, NodeBasic, NodeIf, NodeInitial } from '@/components/react-flow/nodes'
 import { Button } from '@shadcn/ui/button'
 import { Switch } from '@shadcn/ui/switch'
@@ -30,6 +31,7 @@ import {
 import { FlaskConical } from 'lucide-react'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { DateTime } from 'tessera-ui/components'
 
 export type ReactFlowCanvasHandle = {
   save: (options?: { shouldRedirect?: boolean }) => Promise<boolean>
@@ -858,6 +860,18 @@ const ReactFlowCanvasInner = (
             className="w-full border-none border-transparent bg-transparent text-lg! font-semibold
               outline-hidden focus-visible:outline-0 focus-visible:ring-0 truncate"
           />
+          {(workflow?.created_by || workflow?.created_at) && (
+            <div
+              className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500
+                dark:text-slate-400">
+              <WorkflowCreatedBy
+                creator={workflow?.created_by}
+                className="max-w-full"
+                textClassName="text-xs text-slate-500 dark:text-slate-400"
+                showEmail={false}
+              />
+            </div>
+          )}
         </div>
 
         <div className="absolute left-[44%] top-10">

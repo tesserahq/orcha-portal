@@ -1,7 +1,7 @@
 import { WorkflowFormValues } from './workflow.schema'
 import { NodeInputType, WorkflowType } from './workflow.type'
 
-type WorkflowPayload = Omit<WorkflowType, 'id' | 'created_at' | 'updated_at'> & {
+type WorkflowPayload = Omit<WorkflowType, 'id' | 'created_at' | 'updated_at' | 'created_by'> & {
   nodes?: NodeInputType[]
 }
 

@@ -1,4 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export interface IWorkflowCreator {
+  id: string
+  email: string
+  avatar_url: string | null
+  first_name: string | null
+  last_name: string | null
+  provider: string | null
+  confirmed_at: string | null
+  verified: boolean
+  verified_at: string | null
+  service_account: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface IWorkflow {
   id?: string
   name: string
@@ -7,6 +22,7 @@ export interface IWorkflow {
   active_version_id?: string
   created_at?: string
   updated_at?: string
+  created_by?: IWorkflowCreator
   nodes?: INodeInput[]
 }
 
