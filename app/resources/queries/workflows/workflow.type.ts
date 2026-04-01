@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { IWorkflowCreator } from '@/types/workflow'
+
 /**
  * For workflow list response
  */
@@ -13,6 +15,7 @@ export type WorkflowType = {
   execution_status_message?: string
   created_at?: string
   updated_at?: string
+  created_by?: IWorkflowCreator
 }
 
 /**

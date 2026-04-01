@@ -86,12 +86,12 @@ export function DataTable<TData, TValue>({
               className="sticky top-0 z-10 w-full bg-slate-100/20 backdrop-blur-md
                 dark:bg-slate-800/50">
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-border dark:hover:bg-navy-700">
+                <TableRow key={headerGroup.id} className="border-border dark:hover:bg-muted/80">
                   {headerGroup.headers.map((header) => {
                     return (
                       <TableHead
                         key={header.id}
-                        className="text-navy-800 dark:text-navy-100 py-2 font-semibold"
+                        className="py-2 font-semibold text-slate-800 dark:text-foreground"
                         style={{ width: header.column.columnDef.size }}>
                         {header.column.columnDef.header ? (
                           header.isPlaceholder ? null : (
@@ -115,11 +115,11 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
-                    className="dark:border-border dark:hover:bg-navy-600 hover:bg-slate-50">
+                    className="hover:bg-slate-50 dark:border-border dark:hover:bg-slate-800/70">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className="text-navy-800 dark:text-navy-100 py-1 ps-4">
+                        className="py-1 ps-4 text-slate-800 dark:text-foreground">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -138,7 +138,7 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
       {meta?.size && (
-        <div className="border-input bg-card dark:bg-navy-800 sticky bottom-0 z-10 border-t p-3">
+        <div className="border-input bg-card sticky bottom-0 z-10 border-t p-3 dark:bg-card">
           <Pagination meta={meta} />
         </div>
       )}

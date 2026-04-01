@@ -1,6 +1,7 @@
 import EmptyContent from '@/components/empty-content/empty-content'
 import { Pagination } from '@/components/data-table/data-pagination'
 import { AppPreloader } from '@/components/loader/pre-loader'
+import { WorkflowCreatedBy } from '@/components/workflows/workflow-created-by'
 import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
 import { Card, CardContent } from '@/modules/shadcn/ui/card'
@@ -10,13 +11,14 @@ import { ensureCanonicalPagination } from '@/utils/pagination.server'
 import { Badge } from '@shadcn/ui/badge'
 import { Button } from '@shadcn/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
-import { Edit, EllipsisVertical, EyeIcon, Trash2 } from 'lucide-react'
-import { useMemo, useRef } from 'react'
+import { EllipsisVertical, EyeIcon, Trash2 } from 'lucide-react'
+import { useRef } from 'react'
 import { Link, LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router'
 import { DateTime, NewButton } from 'tessera-ui/components'
 import DeleteConfirmation, {
   type DeleteConfirmationHandle,
 } from 'tessera-ui/components/delete-confirmation'
+import Separator from '@/modules/shadcn/ui/separator'
 
 export function loader({ request }: LoaderFunctionArgs) {
   const canonical = ensureCanonicalPagination(request, {
@@ -124,9 +126,16 @@ export default function WorkflowsIndex() {
                   </Link>
 
                   <div
-                    className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500
+                      dark:text-slate-400">
+                    <WorkflowCreatedBy
+                      creator={workflow.created_by}
+                      className="max-w-full"
+                      textClassName="text-xs text-slate-500 dark:text-slate-400"
+                    />
+                    <Separator className="h-3 w-0.5" />
                     <div className="flex items-center gap-1">
-                      <span>Created</span>
+                      <span>Created at</span>
                       <DateTime
                         date={workflow.created_at!}
                         tooltipSide="right"
