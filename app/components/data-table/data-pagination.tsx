@@ -63,7 +63,7 @@ export const Pagination = ({ meta }: { meta: IPagingInfo }) => {
   return (
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-1">
-        <p className="text-navy-800 dark:text-navy-200 w-28 text-sm">Items per page:</p>
+        <p className="w-28 text-sm text-slate-800 dark:text-foreground">Items per page:</p>
         <div className="w-20">
           <Select value={row} onValueChange={onChange}>
             <SelectTrigger className="h-8">
@@ -81,7 +81,7 @@ export const Pagination = ({ meta }: { meta: IPagingInfo }) => {
 
       <PaginationComponent className="justify-end">
         <PaginationContent>
-          <div className="text-navy-800 dark:text-navy-200 mr-2 text-sm">
+          <div className="mr-2 text-sm text-slate-800 dark:text-foreground">
             {startRecord}-{endRecord} of {total.toLocaleString()}
           </div>
           {/* First page button */}
