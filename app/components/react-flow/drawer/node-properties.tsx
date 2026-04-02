@@ -19,6 +19,7 @@ import { Trash2, X } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useState } from 'react'
 import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
+import { useParams } from 'react-router'
 
 interface ParamProps {
   node: Node
@@ -37,6 +38,7 @@ interface IProps {
   callback: (nodeId: string, parameters: any, displayName: string) => void
   onDelete?: (nodeId: string) => void
   onClose?: () => void
+  onOpenChange?: (open: boolean) => void
 }
 
 const getFallbackPropertiesFromParameters = (
@@ -52,9 +54,10 @@ const getFallbackPropertiesFromParameters = (
 }
 
 const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
-  { apiUrl, nodeEnv, callback, onDelete, onClose }: IProps,
+  { apiUrl, nodeEnv, callback, onDelete, onClose, onOpenChange }: IProps,
   ref
 ) => {
+  const params = useParams()
   const { token } = useApp()
   const handleApiError = useHandleApiError()
   const [open, setOpen] = useState<boolean>(false)
@@ -64,6 +67,11 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false)
   const [eventTypes, setEventTypes] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
+
+  const handleDrawerOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    onOpenChange?.(nextOpen)
+  }
 
   const fetchEventTypes = async () => {
     try {
@@ -78,9 +86,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
 
   useImperativeHandle(ref, () => ({
     onOpen(args: ParamProps) {
-      console.log('args ', args)
-
-      setOpen(true)
+      handleDrawerOpenChange(true)
       setNodeData(args)
       setDisplayName(args.title)
       const properties = args.node.data.properties as INodeProperty[]
@@ -106,7 +112,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
     },
 
     onClose() {
-      setOpen(false)
+      handleDrawerOpenChange(false)
       setIsLoading(true)
     },
   }))
@@ -122,12 +128,12 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
     if (onDelete && nodeData?.node.id) {
       onDelete(nodeData.node.id)
       setShowDeleteConfirm(false)
-      setOpen(false)
+      handleDrawerOpenChange(false)
     }
   }
 
   const handleClose = () => {
-    setOpen(false)
+    handleDrawerOpenChange(false)
     setIsLoading(true) // to trigger loading when fetching event-types
 
     if (onClose) {
@@ -146,9 +152,10 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
   return (
     <div
       className={cn(
-        `fixed right-0 top-0 h-full w-full max-w-(--breakpoint-sm)! overflow-auto bg-card pt-32
-        shadow-sm transition-transform duration-300 ease-in-out`,
-        open ? 'translate-x-0' : 'pointer-events-none translate-x-full'
+        `fixed right-0 top-0 h-full w-full max-w-(--breakpoint-sm)! overflow-auto bg-card shadow-sm
+        transition-transform duration-300 ease-in-out`,
+        open ? 'translate-x-0' : 'pointer-events-none translate-x-full',
+        params?.workflow_id ? 'pt-36' : 'pt-28'
       )}>
       <div className="flex h-full flex-col overflow-auto">
         {/* Header */}
@@ -214,7 +221,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
           </Button>
           <Button
             onClick={() => {
-              setOpen(false)
+              handleDrawerOpenChange(false)
               callback(nodeData?.node.id as string, parameters, displayName)
             }}>
             Save
