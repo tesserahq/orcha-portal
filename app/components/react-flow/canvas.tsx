@@ -71,6 +71,8 @@ const ReactFlowCanvasInner = (
     is_active: workflow?.is_active || false,
     nodes: workflow?.nodes || [],
   })
+  const [isNodeCategoriesOpen, setIsNodeCategoriesOpen] = useState(false)
+  const [isNodePropertiesOpen, setIsNodePropertiesOpen] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const skipInitialDirtyRef = useRef(true)
   const config = {
@@ -90,6 +92,7 @@ const ReactFlowCanvasInner = (
     },
   })
   const isSaving = isCreating || isUpdating
+  const shouldHideSaveButton = isNodeCategoriesOpen || isNodePropertiesOpen
   const nodeTypes = {
     add: NodeAdd as any,
     addIf: NodeAdd as any,
@@ -185,6 +188,16 @@ const ReactFlowCanvasInner = (
     []
   )
 
+  const createInitialNode = useCallback(
+    (): Node => ({
+      id: 'initial',
+      type: 'initial',
+      position: { x: 0, y: 0 },
+      data: { onAddNode: handleOpenAddDialog },
+    }),
+    [handleOpenAddDialog]
+  )
+
   const convertInitialNodesToReactFlowNodes = useCallback(
     (nodesToConvert: INodeInput[]): Node[] => {
       const reactFlowNodes = nodesToConvert.map((node: INodeInput) => {
@@ -225,6 +238,12 @@ const ReactFlowCanvasInner = (
     const placeholders = ['-add', '-add-true', '-add-false']
     const nodesById = new Map(nodesSnapshot.map((nodeItem) => [nodeItem.id, nodeItem]))
     const removalMap = new Map<string, Node>()
+    const lastFlowNode = [...nodesSnapshot]
+      .reverse()
+      .find(
+        (nodeItem) =>
+          nodeItem.type !== 'add' && nodeItem.type !== 'addIf' && nodeItem.type !== 'initial'
+      )
 
     deleted.forEach((nodeItem) => {
       const normalizedId = placeholders.reduce(
@@ -240,6 +259,13 @@ const ReactFlowCanvasInner = (
           removalMap.set(placeholder.id, placeholder)
         }
       })
+
+      if (lastFlowNode?.id === normalizedId) {
+        const trailingAddNode = nodesById.get('add')
+        if (trailingAddNode) {
+          removalMap.set(trailingAddNode.id, trailingAddNode)
+        }
+      }
     })
 
     return Array.from(removalMap.values())
@@ -382,6 +408,10 @@ const ReactFlowCanvasInner = (
       const idsToRemove = new Set(nodesToRemove.map((nodeItem) => nodeItem.id))
 
       const remainingNodes = nodesSnapshot.filter((nodeItem) => !idsToRemove.has(nodeItem.id))
+      const remainingFlowNodes = remainingNodes.filter(
+        (nodeItem) =>
+          nodeItem.type !== 'add' && nodeItem.type !== 'addIf' && nodeItem.type !== 'initial'
+      )
 
       let nextEdges = edgesSnapshot.filter(
         (edgeItem) => !idsToRemove.has(edgeItem.source) && !idsToRemove.has(edgeItem.target)
@@ -420,15 +450,26 @@ const ReactFlowCanvasInner = (
         })
       })
 
+      if (remainingFlowNodes.length === 0) {
+        const initialNode = createInitialNode()
+        nodesRef.current = [initialNode]
+        edgesRef.current = []
+        setNodes([initialNode])
+        setEdges([])
+        return
+      }
+
       const { nodes: nodesWithPlaceholders, edges: edgesWithPlaceholders } = ensurePlaceholderNodes(
         remainingNodes,
         nextEdges
       )
 
+      nodesRef.current = nodesWithPlaceholders
+      edgesRef.current = edgesWithPlaceholders
       setNodes(nodesWithPlaceholders)
       setEdges(edgesWithPlaceholders)
     },
-    [collectNodesForRemoval, ensurePlaceholderNodes, nodes, edges, markDirty]
+    [collectNodesForRemoval, createInitialNode, ensurePlaceholderNodes, nodes, edges, markDirty]
   )
 
   const onSaveNode = (
@@ -813,16 +854,9 @@ const ReactFlowCanvasInner = (
   useEffect(() => {
     // handle delete initial node or add node when user delete all nodes
     if (nodes.length === 0 || nodes[0].type === 'add') {
-      setNodes([
-        {
-          id: 'initial',
-          type: 'initial',
-          position: { x: 0, y: 0 },
-          data: { onAddNode: handleOpenAddDialog },
-        },
-      ])
+      setNodes([createInitialNode()])
     }
-  }, [nodes])
+  }, [createInitialNode, nodes])
 
   useEffect(() => {
     if (initialNodes.length > 0) {
@@ -840,7 +874,7 @@ const ReactFlowCanvasInner = (
   return (
     <div className="relative h-full w-full bg-stone-100 dark:bg-slate-900">
       <div
-        className="absolute -top-1 left-0 z-10 flex w-full animate-slide-down items-center
+        className="absolute -top-1 left-0 z-1 flex w-full animate-slide-down items-center
           justify-between border-b bg-card py-3 pl-4 pr-8">
         <div className="max-w-[70%] shrink-0">
           <input
@@ -874,7 +908,11 @@ const ReactFlowCanvasInner = (
           )}
         </div>
 
-        <div className="absolute left-[44%] top-10">
+        <div
+          className={cn(
+            'absolute left-[42%] top-10',
+            params?.workflow_id && 'left-[44%]' && 'top-14'
+          )}>
           <Tabs
             value={activeTab}
             onValueChange={(value) => onChangeTab(value as 'editor' | 'executions')}>
@@ -902,9 +940,10 @@ const ReactFlowCanvasInner = (
 
           <Button
             onClick={() => onSaveWorkflow({ isExecution: false })}
-            className="ml-3"
+            size="sm"
+            className={cn('ml-3', shouldHideSaveButton && 'hidden')}
             disabled={nodes.length <= 1 || isSaving || isExecution}>
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? 'Saving...' : 'Save Workflow'}
           </Button>
         </div>
       </div>
@@ -953,6 +992,7 @@ const ReactFlowCanvasInner = (
         apiUrl={apiUrl!}
         nodeEnv={nodeEnv}
         onSave={onSaveNode}
+        onOpenChange={setIsNodeCategoriesOpen}
       />
 
       <NodePropertyDrawer
@@ -962,6 +1002,7 @@ const ReactFlowCanvasInner = (
         callback={handleNodeUpdate}
         onClose={handleConfigurationClose}
         onDelete={handleNodeDelete}
+        onOpenChange={setIsNodePropertiesOpen}
       />
     </div>
   )

@@ -40,7 +40,6 @@ export default function WorkflowDetails() {
   const fetchWorkflowDetail = async () => {
     try {
       const response = await fetchApi(`${apiUrl}/workflows/${params.workflow_id}`, token!, nodeEnv)
-      console.log('response ', response)
 
       // get edges from nodes api
       const edges = response.nodes.flatMap((node: INodeInput) => {
