@@ -3,15 +3,19 @@ import { IQueryConfig, IQueryParams } from '@/resources/queries'
 import {
   createWorkflow,
   deleteWorkflow,
+  executeWorkflow,
   getWorkflow,
+  getWorkflowExecutionList,
   getWorkflows,
   updateWorkflow,
 } from '@/resources/queries/workflows/workflow.queries'
 import {
   CreateWorkflowInput,
+  ExecuteWorkflowInput,
   UpdateWorkflowInput,
 } from '@/resources/queries/workflows/workflow.schema'
 import { WorkflowType } from '@/resources/queries/workflows/workflow.type'
+import { WorkflowExecutionItem } from '@/resources/queries/workflows/workflow.type'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
@@ -39,6 +43,8 @@ export const workflowQueryKeys = {
   list: (params: IQueryParams) => [...workflowQueryKeys.lists(), params] as const,
   details: () => [...workflowQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...workflowQueryKeys.details(), id] as const,
+  executions: () => [...workflowQueryKeys.all, 'executions'] as const,
+  execution: (id: string) => [...workflowQueryKeys.executions(), id] as const,
 }
 
 /**
@@ -55,14 +61,14 @@ export function useWorkflows(
     staleTime?: number
   }
 ) {
-  if (!config.token) {
-    throw new QueryError('Token is required', 'TOKEN_REQUIRED')
-  }
-
   return useQuery({
     queryKey: workflowQueryKeys.list(params),
     queryFn: async () => {
       try {
+        if (!config.token) {
+          throw new QueryError('Token is required', 'TOKEN_REQUIRED')
+        }
+
         return await getWorkflows(config, params)
       } catch (error: any) {
         throw new QueryError(error)
@@ -84,14 +90,14 @@ export function useWorkflow(
     staleTime?: number
   }
 ) {
-  if (!config.token) {
-    throw new QueryError('Token is required', 'TOKEN_REQUIRED')
-  }
-
   return useQuery({
     queryKey: workflowQueryKeys.detail(id),
     queryFn: async () => {
       try {
+        if (!config.token) {
+          throw new QueryError('Token is required', 'TOKEN_REQUIRED')
+        }
+
         return await getWorkflow(config, id)
       } catch (error: any) {
         throw new QueryError(error)
@@ -222,6 +228,80 @@ export function useDeleteWorkflow(
     onError: (error: Error) => {
       if (options?.showToast !== false) {
         toast.error('Failed to delete workflow', {
+          description: error.message,
+        })
+      }
+      options?.onError?.(error)
+    },
+  })
+}
+
+/**
+ * Hook for list workflow executions
+ */
+export function useWorkflowExecutions(
+  config: IQueryConfig,
+  id: string,
+  options?: {
+    enabled?: boolean
+    staleTime?: number
+  }
+) {
+  return useQuery({
+    queryKey: workflowQueryKeys.execution(id),
+    queryFn: async () => {
+      try {
+        if (!config.token) {
+          throw new QueryError('Token is required', 'TOKEN_REQUIRED')
+        }
+
+        return await getWorkflowExecutionList(config, id)
+      } catch (error: any) {
+        throw new QueryError(error)
+      }
+    },
+    staleTime: options?.staleTime || 5 * 60 * 1000,
+    enabled: options?.enabled !== false && !!id,
+  })
+}
+
+/**
+ * Hook for executing a workflow
+ */
+export function useExecuteWorkflow(
+  config: IQueryConfig,
+  options?: {
+    onSuccess?: (data: WorkflowExecutionItem) => void
+    onError?: (error: Error) => void
+    showToast?: boolean
+  }
+) {
+  const queryClient = useQueryClient()
+
+  if (!config.token) {
+    throw new QueryError('Token is required', 'TOKEN_REQUIRED')
+  }
+
+  return useMutation({
+    mutationFn: async (variables: { id: string; data: ExecuteWorkflowInput }) => {
+      try {
+        return await executeWorkflow(config, variables.id, variables.data)
+      } catch (error: any) {
+        throw new QueryError(error)
+      }
+    },
+    onSuccess: (data, variables) => {
+      if (variables?.id) {
+        queryClient.invalidateQueries({ queryKey: workflowQueryKeys.execution(variables.id) })
+      }
+      if (options?.showToast !== false) {
+        toast.success('Workflow execution started')
+      }
+      options?.onSuccess?.(data)
+    },
+    onError: (error: Error) => {
+      if (options?.showToast !== false) {
+        toast.error('Failed to execute workflow', {
           description: error.message,
         })
       }

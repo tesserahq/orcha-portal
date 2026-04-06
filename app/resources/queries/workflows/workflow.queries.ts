@@ -1,7 +1,7 @@
 import { fetchApi } from '@/libraries/fetch'
 import { IPaging } from '@/resources/types'
-import { CreateWorkflowInput, UpdateWorkflowInput } from './workflow.schema'
-import { WorkflowType } from './workflow.type'
+import { CreateWorkflowInput, ExecuteWorkflowInput, UpdateWorkflowInput } from './workflow.schema'
+import { WorkflowExecutionItem, WorkflowType } from './workflow.type'
 import { IQueryConfig, IQueryParams } from '..'
 
 const WORKFLOWS_ENDPOINT = '/workflows'
@@ -80,5 +80,42 @@ export async function deleteWorkflow(config: IQueryConfig, id: string): Promise<
 
   await fetchApi(`${apiUrl}${WORKFLOWS_ENDPOINT}/${id}`, token, nodeEnv, {
     method: 'DELETE',
+  })
+}
+
+/**
+ * List Workflow Executions
+ */
+export async function getWorkflowExecutionList(
+  config: IQueryConfig,
+  id: string
+): Promise<IPaging<WorkflowExecutionItem>> {
+  const { apiUrl, token, nodeEnv } = config
+
+  const response = await fetchApi(
+    `${apiUrl}${WORKFLOWS_ENDPOINT}/${id}/executions`,
+    token,
+    nodeEnv,
+    {
+      method: 'GET',
+    }
+  )
+
+  return response as IPaging<WorkflowExecutionItem>
+}
+
+/**
+ * Execute a workflow by ID
+ */
+export async function executeWorkflow(
+  config: IQueryConfig,
+  id: string,
+  data: ExecuteWorkflowInput
+): Promise<WorkflowExecutionItem> {
+  const { apiUrl, token, nodeEnv } = config
+
+  return await fetchApi(`${apiUrl}${WORKFLOWS_ENDPOINT}/${id}/execute`, token, nodeEnv, {
+    method: 'POST',
+    body: JSON.stringify(data),
   })
 }

@@ -16,6 +16,7 @@ export type WorkflowType = {
   created_at?: string
   updated_at?: string
   created_by?: IWorkflowCreator
+  nodes?: NodeInputType[]
 }
 
 /**
@@ -77,4 +78,20 @@ export type NodeProperty = {
   default: string
   description: string
   options?: IPropertyOption[]
+}
+
+/**
+ * Workflow execution
+ */
+export type WorkflowExecutionItem = {
+  id: string
+  workflow_id: string
+  workflow_version_id: string
+  status: string
+  triggered_by: string
+  started_at: string
+  finished_at: string
+  result: any
+  error_message: string
+  created_at: string
 }

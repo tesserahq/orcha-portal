@@ -1,20 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NodeCategoriesDrawer, NodePropertyDrawer } from '@/components/react-flow/drawer'
-import { WorkflowCreatedBy } from '@/components/workflows/workflow-created-by'
 import { NodeAdd, NodeBasic, NodeIf, NodeInitial } from '@/components/react-flow/nodes'
+import { WorkflowCreatedBy } from '@/components/workflows/workflow-created-by'
+import {
+  WorkflowExecutionHistoryPanel,
+  type WorkflowExecutionHistoryPanelProps,
+} from '@/components/workflows/workflow-execution-history-panel'
+import { useApp } from '@/context/AppContext'
+import { NodeENVType } from '@/libraries/fetch'
+import { Badge } from '@/modules/shadcn/ui/badge'
+import {
+  useCreateWorkflow,
+  useExecuteWorkflow,
+  useUpdateWorkflow,
+} from '@/resources/hooks/workflows/use-workflows'
+import {
+  CreateWorkflowInput,
+  ExecuteWorkflowInput,
+  UpdateWorkflowInput,
+} from '@/resources/queries/workflows/workflow.schema'
+import { WorkflowType } from '@/resources/queries/workflows/workflow.type'
+import { INodeInput } from '@/types/workflow'
+import { cn } from '@shadcn/lib/utils'
 import { Button } from '@shadcn/ui/button'
 import { Switch } from '@shadcn/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@shadcn/ui/tabs'
-import { useApp } from '@/context/AppContext'
-import { NodeENVType } from '@/libraries/fetch'
-import { useCreateWorkflow, useUpdateWorkflow } from '@/resources/hooks/workflows/use-workflows'
-import {
-  CreateWorkflowInput,
-  UpdateWorkflowInput,
-} from '@/resources/queries/workflows/workflow.schema'
-import { INodeInput, IWorkflow } from '@/types/workflow'
-import { cn } from '@shadcn/lib/utils'
-import { useLocation, useNavigate, useParams } from 'react-router'
 import {
   addEdge,
   applyEdgeChanges,
@@ -29,9 +39,17 @@ import {
   ReactFlow,
 } from '@xyflow/react'
 import { FlaskConical } from 'lucide-react'
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import {
+  Activity,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import { DateTime } from 'tessera-ui/components'
 
 export type ReactFlowCanvasHandle = {
   save: (options?: { shouldRedirect?: boolean }) => Promise<boolean>
@@ -42,13 +60,23 @@ interface IProps {
   nodeEnv: NodeENVType
   initialNodes: INodeInput[]
   initialEdges: Edge[]
-  workflow?: IWorkflow
+  workflow?: WorkflowType
   isExecution?: boolean
+  executionHistory?: WorkflowExecutionHistoryPanelProps
   onDirtyChange?: (isDirty: boolean) => void
 }
 
 const ReactFlowCanvasInner = (
-  { apiUrl, nodeEnv, initialNodes, initialEdges, workflow, isExecution, onDirtyChange }: IProps,
+  {
+    apiUrl,
+    nodeEnv,
+    initialNodes,
+    initialEdges,
+    workflow,
+    isExecution,
+    executionHistory,
+    onDirtyChange,
+  }: IProps,
   ref: React.ForwardedRef<ReactFlowCanvasHandle>
 ) => {
   const params = useParams()
@@ -65,7 +93,7 @@ const ReactFlowCanvasInner = (
   const [activeTab, setActiveTab] = useState<'editor' | 'executions'>(
     pathname.includes('executions') ? 'executions' : 'editor'
   )
-  const [workflowPayload, setWorkflowPayload] = useState<IWorkflow>({
+  const [workflowPayload, setWorkflowPayload] = useState<WorkflowType>({
     name: workflow?.name || 'My Workflow',
     description: workflow?.description || '',
     is_active: workflow?.is_active || false,
@@ -87,6 +115,12 @@ const ReactFlowCanvasInner = (
     },
   })
   const { mutateAsync: updateWorkflow, isPending: isUpdating } = useUpdateWorkflow(config, {
+    onError: () => {
+      setIsExecuting(false)
+    },
+  })
+  const { mutateAsync: executeWorkflow } = useExecuteWorkflow(config, {
+    showToast: false,
     onError: () => {
       setIsExecuting(false)
     },
@@ -218,6 +252,14 @@ const ReactFlowCanvasInner = (
           },
         }
       })
+
+      if (reactFlowNodes.length === 0) {
+        return []
+      }
+
+      if (isExecution) {
+        return reactFlowNodes
+      }
 
       const lastNode = reactFlowNodes[reactFlowNodes.length - 1]
       const addNode: Node = {
@@ -400,7 +442,6 @@ const ReactFlowCanvasInner = (
         return
       }
       markDirty()
-      console.log('makedirty onNodesDelete')
 
       const nodesSnapshot = [...nodes]
       const edgesSnapshot = [...edges]
@@ -649,7 +690,7 @@ const ReactFlowCanvasInner = (
     setNodes(nextNodes)
     setEdges(nextEdges)
 
-    if (!isNodeIf) {
+    if (!isNodeIf && !isExecution) {
       configurationNodeRef.current?.onOpen({
         node: newWorkflowNode,
         title: newWorkflowNode?.data.displayName as string,
@@ -757,13 +798,37 @@ const ReactFlowCanvasInner = (
     }
   }
 
-  const onExecuteWorkflow = () => {
+  const onExecuteWorkflow = async () => {
+    const workflowId = params?.workflow_id
+    if (!workflowId) return
+
     setIsExecuting(true)
-    navigate(`/workflows/${params?.workflow_id}/executions`)
+    try {
+      const didSave = await onSaveWorkflow({ isExecution: false, shouldRedirect: false })
+      if (!didSave) {
+        setIsExecuting(false)
+        return
+      }
+
+      const payload: ExecuteWorkflowInput = {
+        initial_data: { additionalProp1: {} },
+        manual: false,
+      }
+
+      await executeWorkflow({ id: workflowId, data: payload })
+      navigate(`/workflows/${workflowId}/executions`)
+    } catch (error: any) {
+      setIsExecuting(false)
+      toast.error('Failed to execute workflow', {
+        description: error?.message || 'Unknown error',
+      })
+    }
   }
 
   const handleNodeClick = useCallback(
     (_: any, node: Node) => {
+      if (isExecution) return
+
       // state selected node
       setNodes((prevNodes) =>
         prevNodes.map((val) => ({
@@ -792,14 +857,12 @@ const ReactFlowCanvasInner = (
         configurationNodeRef.current?.onClose()
       }
     },
-    [nodes]
+    [isExecution, nodes]
   )
 
   const handleNodeUpdate = useCallback(
     (nodeId: string, parameters: any, displayName: string) => {
       markDirty()
-      console.log('makedirty')
-
       setNodes((prevNodes) =>
         prevNodes.map((node) =>
           node.id === nodeId
@@ -852,18 +915,23 @@ const ReactFlowCanvasInner = (
   }, [])
 
   useEffect(() => {
+    if (isExecution) return
     // handle delete initial node or add node when user delete all nodes
     if (nodes.length === 0 || nodes[0].type === 'add') {
       setNodes([createInitialNode()])
     }
-  }, [createInitialNode, nodes])
+  }, [createInitialNode, nodes, isExecution])
 
   useEffect(() => {
     if (initialNodes.length > 0) {
       const reactFlowNodes = convertInitialNodesToReactFlowNodes(initialNodes)
       setNodes(reactFlowNodes)
+      return
     }
-  }, [initialNodes, convertInitialNodesToReactFlowNodes])
+    if (isExecution) {
+      setNodes([])
+    }
+  }, [initialNodes, convertInitialNodesToReactFlowNodes, isExecution])
 
   useEffect(() => {
     if (workflow) {
@@ -872,31 +940,38 @@ const ReactFlowCanvasInner = (
   }, [workflow])
 
   return (
-    <div className="relative h-full w-full bg-stone-100 dark:bg-slate-900">
+    <div
+      className="relative flex min-h-0 h-full w-full flex-col overflow-hidden bg-stone-100
+        dark:bg-slate-900">
       <div
         className="absolute -top-1 left-0 z-1 flex w-full animate-slide-down items-center
           justify-between border-b bg-card py-3 pl-4 pr-8">
         <div className="max-w-[70%] shrink-0">
-          <input
-            value={workflowPayload?.name}
-            aria-label="Workflow name"
-            readOnly={isExecution}
-            onChange={(e) => {
-              if (!isExecution) {
-                markDirty()
-              }
-              setWorkflowPayload({
-                ...workflowPayload,
-                name: e.target.value || '',
-              })
-            }}
-            onBlur={() => {}}
-            className="w-full border-none border-transparent bg-transparent text-lg! font-semibold
-              outline-hidden focus-visible:outline-0 focus-visible:ring-0 truncate"
-          />
+          {isExecution ? (
+            <h1 className="text-lg font-semibold">{workflowPayload?.name}</h1>
+          ) : (
+            <input
+              value={workflowPayload?.name}
+              aria-label="Workflow name"
+              readOnly={isExecution}
+              onChange={(e) => {
+                if (!isExecution) {
+                  markDirty()
+                }
+                setWorkflowPayload({
+                  ...workflowPayload,
+                  name: e.target.value || '',
+                })
+              }}
+              onBlur={() => {}}
+              className="w-full border-none border-transparent bg-transparent text-lg! font-semibold
+                outline-hidden focus-visible:outline-0 focus-visible:ring-0 truncate"
+            />
+          )}
+
           {(workflow?.created_by || workflow?.created_at) && (
             <div
-              className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500
                 dark:text-slate-400">
               <WorkflowCreatedBy
                 creator={workflow?.created_by}
@@ -925,44 +1000,96 @@ const ReactFlowCanvasInner = (
           </Tabs>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span>{!workflowPayload?.is_active ? 'Inactive' : 'Active'}</span>
-          <Switch
-            disabled={isExecution}
-            checked={workflowPayload?.is_active}
-            onCheckedChange={(value) => {
-              setWorkflowPayload({
-                ...workflowPayload,
-                is_active: value,
-              })
-            }}
-          />
+        <Activity
+          mode={
+            isExecution && ['error', 'completed'].includes(workflow?.execution_status || '')
+              ? 'visible'
+              : 'hidden'
+          }>
+          <div className="flex flex-col items-end gap-1">
+            <Badge
+              variant={workflow?.execution_status === 'error' ? 'destructive' : 'default'}
+              className="text-xs font-medium uppercase">
+              {workflow?.execution_status || 'Unknown'}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {workflow?.execution_status_message || 'Unknown'}
+            </span>
+          </div>
+        </Activity>
 
-          <Button
-            onClick={() => onSaveWorkflow({ isExecution: false })}
-            size="sm"
-            className={cn('ml-3', shouldHideSaveButton && 'hidden')}
-            disabled={nodes.length <= 1 || isSaving || isExecution}>
-            {isSaving ? 'Saving...' : 'Save Workflow'}
-          </Button>
-        </div>
+        <Activity mode={!isExecution ? 'visible' : 'hidden'}>
+          <div className="flex items-center gap-2">
+            <span>{!workflowPayload?.is_active ? 'Inactive' : 'Active'}</span>
+            <Switch
+              disabled={isExecution}
+              checked={workflowPayload?.is_active}
+              onCheckedChange={(value) => {
+                setWorkflowPayload({
+                  ...workflowPayload,
+                  is_active: value,
+                })
+              }}
+            />
+
+            <Button
+              onClick={() => onSaveWorkflow({ isExecution: false })}
+              size="sm"
+              className={cn('ml-3', shouldHideSaveButton && 'hidden')}
+              disabled={nodes.length <= 1 || isSaving || isExecution}>
+              {isSaving ? 'Saving...' : 'Save Workflow'}
+            </Button>
+          </div>
+        </Activity>
       </div>
 
-      <ReactFlow
-        className="animate-slide-up"
-        nodes={isExecution ? nodes.filter((node) => node.type !== 'add') : nodes}
-        edges={edges}
-        disableKeyboardA11y
-        onNodeClick={handleNodeClick}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodesDelete={onNodesDelete}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView>
-        {!isExecution && <Background />}
-        <Controls />
-      </ReactFlow>
+      {isExecution && executionHistory ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background md:flex-row">
+          <WorkflowExecutionHistoryPanel {...executionHistory} />
+          <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+            <ReactFlow
+              className="animate-slide-up h-full"
+              nodes={nodes.filter((node) => node.type !== 'add')}
+              edges={edges}
+              deleteKeyCode={null}
+              disableKeyboardA11y
+              elementsSelectable={false}
+              nodesConnectable={false}
+              nodesDraggable={false}
+              onNodeClick={handleNodeClick}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onNodesDelete={onNodesDelete}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              fitView>
+              <Controls />
+            </ReactFlow>
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1">
+          <ReactFlow
+            className="animate-slide-up h-full"
+            nodes={isExecution ? nodes.filter((node) => node.type !== 'add') : nodes}
+            edges={edges}
+            deleteKeyCode={isExecution ? null : undefined}
+            disableKeyboardA11y
+            elementsSelectable={!isExecution}
+            nodesConnectable={!isExecution}
+            nodesDraggable={!isExecution}
+            onNodeClick={handleNodeClick}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onNodesDelete={onNodesDelete}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView>
+            {!isExecution && <Background />}
+            <Controls />
+          </ReactFlow>
+        </div>
+      )}
 
       <div
         className={cn(
@@ -976,7 +1103,7 @@ const ReactFlowCanvasInner = (
               ? onExecuteWorkflow()
               : onSaveWorkflow({ isExecution: true, shouldRedirect: true })
           }
-          disabled={isSaving}>
+          disabled={isSaving || isExecuting}>
           <FlaskConical />
           <span>
             {/* cek if user on new page and click execute button, show 'Save and Executing Workflow' */}
@@ -987,23 +1114,27 @@ const ReactFlowCanvasInner = (
         </Button>
       </div>
 
-      <NodeCategoriesDrawer
-        ref={nodeCategoriesRef}
-        apiUrl={apiUrl!}
-        nodeEnv={nodeEnv}
-        onSave={onSaveNode}
-        onOpenChange={setIsNodeCategoriesOpen}
-      />
+      {!isExecution && (
+        <NodeCategoriesDrawer
+          ref={nodeCategoriesRef}
+          apiUrl={apiUrl!}
+          nodeEnv={nodeEnv}
+          onSave={onSaveNode}
+          onOpenChange={setIsNodeCategoriesOpen}
+        />
+      )}
 
-      <NodePropertyDrawer
-        ref={configurationNodeRef}
-        apiUrl={apiUrl!}
-        nodeEnv={nodeEnv}
-        callback={handleNodeUpdate}
-        onClose={handleConfigurationClose}
-        onDelete={handleNodeDelete}
-        onOpenChange={setIsNodePropertiesOpen}
-      />
+      {!isExecution && (
+        <NodePropertyDrawer
+          ref={configurationNodeRef}
+          apiUrl={apiUrl!}
+          nodeEnv={nodeEnv}
+          callback={handleNodeUpdate}
+          onClose={handleConfigurationClose}
+          onDelete={handleNodeDelete}
+          onOpenChange={setIsNodePropertiesOpen}
+        />
+      )}
     </div>
   )
 }
