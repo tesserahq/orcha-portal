@@ -102,3 +102,22 @@ export const defaultWorkflowFormValues: WorkflowFormValues = {
 
 export type CreateWorkflowInput = z.infer<typeof createWorkflowSchema>
 export type UpdateWorkflowInput = z.infer<typeof updateWorkflowSchema>
+
+// ============================================================================
+// Execution Schemas
+// ============================================================================
+
+/**
+ * Execute workflow schema
+ * NOTE: `initial_data` is expected to include `additionalProp1` per API contract.
+ */
+export const executeWorkflowSchema = z.object({
+  initial_data: z
+    .object({
+      additionalProp1: z.record(z.string(), z.unknown()),
+    })
+    .passthrough(),
+  manual: z.boolean(),
+})
+
+export type ExecuteWorkflowInput = z.infer<typeof executeWorkflowSchema>

@@ -50,7 +50,7 @@ export const WorkflowCreatedBy = ({
 
   return (
     <div className={cn('flex min-w-0 items-center gap-2', className)}>
-      <Avatar className={cn('size-6', avatarClassName)}>
+      <Avatar className={cn('size-5', avatarClassName)}>
         <AvatarImage
           src={creator.avatar_url || '/images/default-avatar.jpg'}
           alt={creatorName}

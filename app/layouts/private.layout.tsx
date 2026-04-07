@@ -65,15 +65,19 @@ export default function PrivateLayout() {
   return (
     <TesseraProvider identiesApiUrl={identiesApiUrl!} token={token ?? ''}>
       <Layout.Main menuItems={menuItems} collapseSidebar={shouldCollapseSidebar}>
-        <Layout.Header
-          actionLogout={() => {}}
-          actionProfile={() => {}}
-          defaultLogo="/images/logo.png"
-          onSetTheme={(theme) => onSetTheme(theme)}
-          selectedTheme={requestInfo.userPrefs.theme || 'system'}
-          title={SITE_CONFIG.siteTitle}
-        />
-        <Outlet />
+        <div className="flex min-h-0 h-full flex-col">
+          <Layout.Header
+            actionLogout={() => {}}
+            actionProfile={() => {}}
+            defaultLogo="/images/logo.png"
+            onSetTheme={(theme) => onSetTheme(theme)}
+            selectedTheme={requestInfo.userPrefs.theme || 'system'}
+            title={SITE_CONFIG.siteTitle}
+          />
+          <div className="min-h-0 flex-1 overflow-auto">
+            <Outlet />
+          </div>
+        </div>
       </Layout.Main>
     </TesseraProvider>
   )

@@ -1,15 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { AppPreloader } from '@/components/loader/pre-loader'
 import ReactFlowCanvas from '@/components/react-flow/canvas'
 import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi } from '@/libraries/fetch'
-import { INodeInput, IWorkflow } from '@/types/workflow'
+import {
+  NodeInputType,
+  WorkflowExecutionNodeResult,
+} from '@/resources/queries/workflows/workflow.type'
+import { useWorkflow, useWorkflowExecutions } from '@/resources/hooks/workflows/use-workflows'
 import { redirectWithToast } from '@/utils/toast.server'
 import { ActionFunctionArgs } from 'react-router'
-import { useLoaderData, useParams } from 'react-router'
+import { Link, useLoaderData, useParams } from 'react-router'
 
 export function loader() {
   const apiUrl = process.env.API_URL
@@ -23,70 +27,179 @@ export default function WorkflowExecution() {
   const { token } = useApp()
   const params = useParams()
   const handleApiError = useHandleApiError()
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [workflow, setWorkflow] = useState<IWorkflow>()
-  const [edges, setEdges] = useState([])
 
-  const fetchWorkflowDetail = async () => {
-    try {
-      const response = await fetchApi(`${apiUrl}/workflows/${params.workflow_id}`, token!, nodeEnv)
-
-      // get edges from nodes api
-      const edges = response.nodes.flatMap((node: INodeInput) => {
-        const nodeEdges = Array.isArray(node?.ui_settings?.edges) ? node.ui_settings.edges : []
-
-        if (nodeEdges.length > 0) {
-          return nodeEdges
-        }
-
-        const sourceId = node?.ui_settings?.id ?? node?.name
-
-        if (!sourceId) {
-          return []
-        }
-
-        return [
-          {
-            id: 'add',
-            source: sourceId,
-            target: 'add',
-          },
-        ]
-      })
-
-      setEdges(edges)
-      setWorkflow(response)
-    } catch (error) {
-      handleApiError(error)
-    } finally {
-      setIsLoading(false)
-    }
+  const config = {
+    apiUrl: apiUrl!,
+    token: token!,
+    nodeEnv,
   }
 
-  useEffect(() => {
-    if (token) {
-      fetchWorkflowDetail()
-    }
-  }, [token])
+  const {
+    data: workflowData,
+    isLoading: isLoadingWorkflow,
+    error: errorWorkflow,
+  } = useWorkflow(config, params.workflow_id!, { enabled: !!token && !!params.workflow_id })
 
-  if (isLoading) return <AppPreloader />
+  const {
+    data: workflowExecutions,
+    isLoading: isLoadingExecutions,
+    error: errorExecutions,
+  } = useWorkflowExecutions(config, params.workflow_id!, {
+    enabled: !!token && !!params.workflow_id,
+  })
+  const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (errorWorkflow) {
+      handleApiError(errorWorkflow)
+    }
+  }, [errorWorkflow, handleApiError])
+
+  useEffect(() => {
+    if (errorExecutions) {
+      handleApiError(errorExecutions)
+    }
+  }, [errorExecutions, handleApiError])
+
+  const workflowNodes = workflowData?.nodes ?? []
+
+  const edges =
+    workflowNodes.flatMap((node: NodeInputType) => {
+      const nodeEdges = Array.isArray(node?.ui_settings?.edges) ? node.ui_settings.edges : []
+
+      if (nodeEdges.length > 0) {
+        return nodeEdges
+      }
+
+      const sourceId = node?.ui_settings?.id ?? node?.name
+
+      if (!sourceId) {
+        return []
+      }
+
+      return [
+        {
+          id: 'add',
+          source: sourceId,
+          target: 'add',
+        },
+      ]
+    }) ?? []
+
+  const executionItems = workflowExecutions?.items ?? []
+  const totalRuns = workflowExecutions?.total ?? 0
+  const selectedExecution = useMemo(
+    () => executionItems.find((execution) => execution.id === selectedExecutionId),
+    [executionItems, selectedExecutionId]
+  )
+
+  const selectedExecutionNodeResult = useMemo(() => {
+    const nodeResult = selectedExecution?.result?.node_results
+    return Array.isArray(nodeResult) ? nodeResult : []
+  }, [selectedExecution])
+
+  const mergedExecutionNodes = useMemo(() => {
+    if (selectedExecutionNodeResult.length === 0) {
+      return []
+    }
+
+    const workflowNodeMap = new Map<string, NodeInputType>()
+    workflowNodes.forEach((node) => {
+      const workflowNodeId = node?.ui_settings?.id
+      if (workflowNodeId) {
+        workflowNodeMap.set(workflowNodeId, node)
+      }
+      workflowNodeMap.set(node.name, node)
+    })
+
+    const nodesFromExecution = selectedExecutionNodeResult
+      .map((nodeResultItem: WorkflowExecutionNodeResult) => {
+        const matchedNode =
+          workflowNodeMap.get(nodeResultItem?.node_id) ??
+          workflowNodeMap.get(nodeResultItem?.node_name)
+
+        if (!matchedNode) {
+          return null
+        }
+
+        return {
+          ...matchedNode,
+          name: nodeResultItem?.node_name || matchedNode.name,
+          kind: nodeResultItem?.node_kind || matchedNode.kind,
+          ui_settings: {
+            ...matchedNode.ui_settings,
+            status: nodeResultItem.status,
+            error_message: nodeResultItem.error_message,
+            timestamp: nodeResultItem.timestamp,
+          },
+        }
+      })
+      .filter(Boolean) as NodeInputType[]
+
+    console.log('nodesFromExecution ', nodesFromExecution)
+
+    return nodesFromExecution
+  }, [workflowNodes, selectedExecutionNodeResult])
+
+  const executionEdges =
+    mergedExecutionNodes?.flatMap((node: NodeInputType) => {
+      const nodeEdges = Array.isArray(node?.ui_settings?.edges) ? node.ui_settings.edges : []
+
+      if (nodeEdges.length > 0) {
+        return nodeEdges
+      }
+
+      const sourceId = node?.ui_settings?.id ?? node?.name
+
+      if (!sourceId) {
+        return []
+      }
+
+      return [
+        {
+          id: 'add',
+          source: sourceId,
+          target: 'add',
+        },
+      ]
+    }) ?? []
+
+  useEffect(() => {
+    if (executionItems.length === 0) {
+      setSelectedExecutionId(null)
+      return
+    }
+
+    const hasSelectedExecution = executionItems.some(
+      (execution) => execution.id === selectedExecutionId
+    )
+    if (!hasSelectedExecution) {
+      setSelectedExecutionId(executionItems[0].id)
+    }
+  }, [executionItems, selectedExecutionId])
+
+  if (isLoadingWorkflow) return <AppPreloader />
+  if (!workflowData) return null
 
   return (
-    <div className="relative h-full w-full">
+    <div
+      className="flex h-full min-h-0 w-full flex-col overflow-hidden"
+      aria-label="Workflow executions view">
       <ReactFlowCanvas
         apiUrl={apiUrl!}
         nodeEnv={nodeEnv!}
-        initialNodes={workflow?.nodes || []}
-        initialEdges={edges}
-        workflow={workflow}
+        initialNodes={mergedExecutionNodes}
+        initialEdges={selectedExecutionId ? executionEdges : edges}
+        workflow={workflowData}
         isExecution
+        executionHistory={{
+          isLoadingExecutions,
+          totalRuns,
+          executionItems,
+          selectedExecutionId,
+          onSelectExecution: (executionId) => setSelectedExecutionId(executionId),
+        }}
       />
-
-      <div className="absolute right-0 top-0 h-full w-80 border-l bg-card px-5 pt-16">
-        <div className="mt-3">
-          <h1 className="text-lg font-semibold">Executions</h1>
-        </div>
-      </div>
     </div>
   )
 }
