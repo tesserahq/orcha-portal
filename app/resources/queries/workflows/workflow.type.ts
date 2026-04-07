@@ -112,4 +112,5 @@ export type WorkflowExecutionNodeResult = {
   node_kind: string
   status: string
   error_message: string
+  timestamp: string
 }
