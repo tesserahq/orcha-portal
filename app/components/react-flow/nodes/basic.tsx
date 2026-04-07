@@ -7,6 +7,7 @@ import { Globe2 } from 'lucide-react'
 
 export type NodeBasicData = {
   firstNode: boolean
+  lastNode: boolean
   name: string
   kind: string
   isSelected: boolean
@@ -14,6 +15,9 @@ export type NodeBasicData = {
   displayName: string
   isExecution: boolean
   icon_color: string
+  status?: string
+  error_message?: string
+  timestamp?: string
 }
 
 type NodeBasicProps = Node<NodeBasicData>
@@ -49,7 +53,10 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
       className={cn(
         `group relative overflow-visible rounded-sm border shadow-none hover:border-primary
         hover:bg-accent hover:text-primary`,
-        data.isSelected ? 'border-primary bg-accent text-primary' : ''
+        data.isSelected ? 'border-primary bg-accent text-primary' : '',
+        data?.status === 'error' &&
+          `border-destructive bg-destructive/10 text-destructive hover:border-destructive
+          hover:bg-destructive/10 hover:text-destructive`
       )}>
       <CardContent
         className={cn(
@@ -61,17 +68,33 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
         ) : (
           <FontAwesomeIcon
             icon={['fas', data?.icon?.split(':')[1].toString() as IconName]}
-            className={cn(getIconColorClass(data?.icon_color), 'group-hover:text-primary')}
+            className={cn(
+              getIconColorClass(data?.icon_color),
+              'group-hover:text-primary',
+              data?.status === 'error' && 'text-destructive group-hover:text-destructive'
+            )}
           />
         )}
       </CardContent>
-      <Handle type="source" position={Position.Right} id={id} />
+      {!data?.lastNode && <Handle type="source" position={Position.Right} id={id} />}
       {!data?.firstNode && <Handle type="target" position={Position.Left} id={id} />}
       <span
-        className="absolute -bottom-5 left-1/2 z-50 w-20 -translate-x-1/2 text-center text-[7px]!
-          font-medium">
+        className={cn(
+          `absolute -bottom-5 left-1/2 z-50 w-20 -translate-x-1/2 text-center text-[7px]!
+          font-medium`,
+          data?.status === 'error' && 'text-destructive'
+        )}>
         {data?.displayName}
       </span>
+      {data.error_message && (
+        <div
+          className="absolute left-1/2 top-full -translate-x-1/2 z-50 w-max max-w-32
+            bg-destructive/10 p-1 mt-5 text-center text-[6px]! font-medium text-destructive
+            leading-tight rounded overflow-y-auto wrap-break-word"
+          title={data.error_message}>
+          <span>{data.error_message}</span>
+        </div>
+      )}
     </Card>
   )
 }

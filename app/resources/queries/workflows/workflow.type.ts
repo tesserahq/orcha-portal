@@ -91,7 +91,25 @@ export type WorkflowExecutionItem = {
   triggered_by: string
   started_at: string
   finished_at: string
-  result: any
+  result: WorkflowExecutionResult
   error_message: string
   created_at: string
+}
+
+export type WorkflowExecutionResult = {
+  status: string
+  workflow_id: string
+  node_results: any[]
+  error_message: string
+  trigger_event: any
+}
+
+export type WorkflowExecutionNodeResult = {
+  input: any
+  output: any
+  node_id: string
+  node_name: string
+  node_kind: string
+  status: string
+  error_message: string
 }

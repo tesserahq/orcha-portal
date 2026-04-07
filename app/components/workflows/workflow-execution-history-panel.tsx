@@ -1,8 +1,9 @@
 import { Badge } from '@shadcn/ui/badge'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@shadcn/ui/tooltip'
 import { cn } from '@shadcn/lib/utils'
 import { WorkflowExecutionItem } from '@/resources/queries/workflows/workflow.type'
 import { DateTime } from 'tessera-ui'
+import type { KeyboardEvent, MouseEvent } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 
 const getExecutionStatusBadgeClassName = (status?: string) => {
   const normalized = status?.toLowerCase()
@@ -22,6 +23,80 @@ const getExecutionStatusBadgeClassName = (status?: string) => {
   return 'border-transparent bg-muted text-muted-foreground'
 }
 
+type ExecutionErrorMessageProps = {
+  message: string
+}
+
+const ExecutionErrorMessage = ({ message }: ExecutionErrorMessageProps) => {
+  const errorTextId = useId()
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isTruncatable, setIsTruncatable] = useState(false)
+  const textRef = useRef<HTMLParagraphElement>(null)
+
+  useLayoutEffect(() => {
+    const element = textRef.current
+    if (!element || isExpanded) {
+      return
+    }
+
+    const measureTruncation = () => {
+      setIsTruncatable(element.scrollHeight > element.clientHeight + 1)
+    }
+
+    measureTruncation()
+    const resizeObserver = new ResizeObserver(measureTruncation)
+    resizeObserver.observe(element)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [message, isExpanded])
+
+  const handleToggleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    setIsExpanded((previous) => !previous)
+  }
+
+  const handleToggleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      event.stopPropagation()
+      setIsExpanded((previous) => !previous)
+    }
+  }
+
+  const showToggle = isExpanded || isTruncatable
+
+  return (
+    <div className="mt-2">
+      <p
+        ref={textRef}
+        id={errorTextId}
+        className={cn(
+          'rounded-sm bg-destructive/10 px-2 py-[3px] text-xs text-destructive wrap-break-word',
+          !isExpanded && 'line-clamp-1',
+          isExpanded && 'whitespace-pre-wrap'
+        )}>
+        {message}
+      </p>
+      {showToggle ? (
+        <button
+          type="button"
+          className="mt-1 text-xs font-medium text-destructive underline-offset-2 hover:underline
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+            focus-visible:ring-offset-2"
+          aria-expanded={isExpanded}
+          aria-controls={errorTextId}
+          aria-label={isExpanded ? 'Collapse error message' : 'Expand error message'}
+          onClick={handleToggleClick}
+          onKeyDown={handleToggleKeyDown}>
+          {isExpanded ? 'Show less' : 'Show more'}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 export type WorkflowExecutionHistoryPanelProps = {
   isLoadingExecutions: boolean
   totalRuns: number
@@ -39,10 +114,13 @@ export const WorkflowExecutionHistoryPanel = ({
 }: WorkflowExecutionHistoryPanelProps) => {
   return (
     <aside
-      className="flex h-[min(40vh,22rem)] pt-16 max-w-[24rem] min-h-0 shrink-0 flex-col border-b
-        border-border bg-card md:h-full md:w-96 md:border-b-0 md:border-r"
+      className="flex h-[min(40vh,22rem)] max-h-[min(40vh,22rem)] w-full max-w-[24rem] min-h-0
+        shrink-0 flex-col overflow-hidden border-b border-border bg-card pt-16 md:h-auto
+        md:max-h-none md:w-96 md:self-stretch md:border-b-0 md:border-r"
       aria-label="Workflow execution history">
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+      <div
+        className="min-h-0 flex-1 basis-0 overflow-y-auto overscroll-y-contain px-3 py-3
+          [scrollbar-gutter:stable]">
         {isLoadingExecutions ? (
           <div className="flex flex-col gap-2 px-1" role="status" aria-live="polite">
             {[0, 1, 2].map((key) => (
@@ -68,9 +146,12 @@ export const WorkflowExecutionHistoryPanel = ({
                     }
                   }}
                   className={cn(
-                    'rounded-lg border border-border bg-background p-3 shadow-sm transition-colors',
-                    'hover:bg-muted/30',
-                    selectedExecutionId === execution.id && 'border-primary bg-muted/40'
+                    `rounded-lg border border-border bg-background cursor-pointer p-3 shadow
+                      transition-colors hover:shadow-md`,
+                    selectedExecutionId === execution.id && 'border-primary bg-primary/10',
+                    selectedExecutionId === execution.id &&
+                      execution.result.error_message &&
+                      'border-destructive bg-destructive/5 hover:bg-destructive/10'
                   )}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -83,34 +164,14 @@ export const WorkflowExecutionHistoryPanel = ({
                         {execution.triggered_by ? `Triggered by ${execution.triggered_by}` : '—'}
                       </p>
                     </div>
-                    {execution.error_message ? (
-                      <TooltipProvider delayDuration={100}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge
-                              variant="secondary"
-                              className={cn(
-                                'shrink-0 cursor-help text-[10px] font-semibold uppercase',
-                                getExecutionStatusBadgeClassName(execution.status)
-                              )}>
-                              {execution.status || 'Unknown'}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-80 wrap-break-word">
-                            {execution.error_message}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          'shrink-0 text-[10px] font-semibold uppercase',
-                          getExecutionStatusBadgeClassName(execution.status)
-                        )}>
-                        {execution.status || 'Unknown'}
-                      </Badge>
-                    )}
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        'shrink-0 text-[10px] font-semibold uppercase',
+                        getExecutionStatusBadgeClassName(execution.status)
+                      )}>
+                      {execution.status || 'Unknown'}
+                    </Badge>
                   </div>
 
                   <dl
@@ -139,6 +200,10 @@ export const WorkflowExecutionHistoryPanel = ({
                       </dd>
                     </div>
                   </dl>
+
+                  {execution.result.error_message ? (
+                    <ExecutionErrorMessage message={execution.result.error_message} />
+                  ) : null}
                 </article>
               </li>
             ))}

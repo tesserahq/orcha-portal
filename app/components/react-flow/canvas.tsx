@@ -234,6 +234,7 @@ const ReactFlowCanvasInner = (
 
   const convertInitialNodesToReactFlowNodes = useCallback(
     (nodesToConvert: INodeInput[]): Node[] => {
+      const lastNodeItem = nodesToConvert[nodesToConvert.length - 1]
       const reactFlowNodes = nodesToConvert.map((node: INodeInput) => {
         const { edges, ...uiSettingsWithoutEdges } = node.ui_settings
 
@@ -246,9 +247,13 @@ const ReactFlowCanvasInner = (
             isExecution: isExecution,
             parameters: node.parameters,
             firstNode: node.ui_settings.firstNode,
+            lastNode: isExecution && node.name === lastNodeItem.name,
             icon: node?.ui_settings?.icon,
             displayName: node?.ui_settings?.displayName,
             icon_color: node.ui_settings.icon_color,
+            status: node.ui_settings.status,
+            error_message: node.ui_settings.error_message,
+            timestamp: node.ui_settings.timestamp,
           },
         }
       })
@@ -562,6 +567,7 @@ const ReactFlowCanvasInner = (
       data: {
         ...(node as INodeInput),
         firstNode: actualFlowNodes.length === 0,
+        lastNode: isExecution ? false : false,
         isSelected: true,
       },
     }
@@ -732,6 +738,7 @@ const ReactFlowCanvasInner = (
               data: edge.data,
             }))
 
+          const hasOutgoingEdges = nodeEdges.length > 0
           return {
             name: node.data.name,
             description: node.data.description,
@@ -745,6 +752,7 @@ const ReactFlowCanvasInner = (
               type: node.type,
               id: node.id,
               firstNode: node.data.firstNode,
+              // lastNode: isExecution ? !hasOutgoingEdges : false,
               icon_color: node.data.icon_color,
             },
           }

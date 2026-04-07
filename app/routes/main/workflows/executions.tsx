@@ -6,7 +6,10 @@ import ReactFlowCanvas from '@/components/react-flow/canvas'
 import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi } from '@/libraries/fetch'
-import { NodeInputType } from '@/resources/queries/workflows/workflow.type'
+import {
+  NodeInputType,
+  WorkflowExecutionNodeResult,
+} from '@/resources/queries/workflows/workflow.type'
 import { useWorkflow, useWorkflowExecutions } from '@/resources/hooks/workflows/use-workflows'
 import { redirectWithToast } from '@/utils/toast.server'
 import { ActionFunctionArgs } from 'react-router'
@@ -89,11 +92,12 @@ export default function WorkflowExecution() {
     () => executionItems.find((execution) => execution.id === selectedExecutionId),
     [executionItems, selectedExecutionId]
   )
+
   const selectedExecutionNodeResult = useMemo(() => {
-    const nodeResult =
-      selectedExecution?.result?.node_results ?? selectedExecution?.result?.node_result
+    const nodeResult = selectedExecution?.result?.node_results
     return Array.isArray(nodeResult) ? nodeResult : []
   }, [selectedExecution])
+
   const mergedExecutionNodes = useMemo(() => {
     if (selectedExecutionNodeResult.length === 0) {
       return []
@@ -109,7 +113,7 @@ export default function WorkflowExecution() {
     })
 
     const nodesFromExecution = selectedExecutionNodeResult
-      .map((nodeResultItem: any) => {
+      .map((nodeResultItem: WorkflowExecutionNodeResult) => {
         const matchedNode =
           workflowNodeMap.get(nodeResultItem?.node_id) ??
           workflowNodeMap.get(nodeResultItem?.node_name)
@@ -122,9 +126,17 @@ export default function WorkflowExecution() {
           ...matchedNode,
           name: nodeResultItem?.node_name || matchedNode.name,
           kind: nodeResultItem?.node_kind || matchedNode.kind,
+          ui_settings: {
+            ...matchedNode.ui_settings,
+            status: nodeResultItem.status,
+            error_message: nodeResultItem.error_message,
+            timestamp: nodeResultItem.timestamp,
+          },
         }
       })
       .filter(Boolean) as NodeInputType[]
+
+    console.log('nodesFromExecution ', nodesFromExecution)
 
     return nodesFromExecution
   }, [workflowNodes, selectedExecutionNodeResult])
