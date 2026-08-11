@@ -27,7 +27,7 @@ export default function NodeProperty({
   return (
     <>
       <Label className="flex items-center gap-2">
-        {property.display_name}
+        <span className="capitalize">{property.display_name}</span>
         {property.description && (
           <TooltipProvider delayDuration={100}>
             <Tooltip>
