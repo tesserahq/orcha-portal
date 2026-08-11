@@ -71,6 +71,16 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
   const handleDrawerOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
     onOpenChange?.(nextOpen)
+
+    // Reset state when closing the drawer
+    if (!nextOpen) {
+      setParameters(undefined)
+      setNodeData(undefined)
+      setDisplayName('')
+      setShowDeleteConfirm(false)
+      setEventTypes([])
+      setIsLoading(true)
+    }
   }
 
   const fetchEventTypes = async () => {
