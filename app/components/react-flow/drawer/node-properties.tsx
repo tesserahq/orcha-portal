@@ -39,6 +39,7 @@ interface IProps {
   onDelete?: (nodeId: string) => void
   onClose?: () => void
   onOpenChange?: (open: boolean) => void
+  onNameChange?: (nodeId: string, displayName: string) => void
 }
 
 const getFallbackPropertiesFromParameters = (
@@ -54,7 +55,7 @@ const getFallbackPropertiesFromParameters = (
 }
 
 const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
-  { apiUrl, nodeEnv, callback, onDelete, onClose, onOpenChange }: IProps,
+  { apiUrl, nodeEnv, callback, onDelete, onClose, onOpenChange, onNameChange }: IProps,
   ref
 ) => {
   const params = useParams()
@@ -94,8 +95,20 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
     }
   }
 
+  const revertNameIfUnsaved = () => {
+    if (nodeData?.node.id) {
+      onNameChange?.(nodeData.node.id, nodeData.title)
+    }
+  }
+
   useImperativeHandle(ref, () => ({
     onOpen(args: ParamProps) {
+      // Switching directly from one node to another without saving:
+      // revert the previous node's live-previewed name first
+      if (nodeData?.node.id && nodeData.node.id !== args.node.id) {
+        revertNameIfUnsaved()
+      }
+
       handleDrawerOpenChange(true)
       setNodeData(args)
       setDisplayName(args.title)
@@ -143,6 +156,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
   }
 
   const handleClose = () => {
+    revertNameIfUnsaved()
     handleDrawerOpenChange(false)
     setIsLoading(true) // to trigger loading when fetching event-types
 
@@ -177,8 +191,9 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
               className="mb-1 h-auto w-full border-none p-0 text-xl! font-semibold outline-hidden
                 focus-visible:bg-white"
               onChange={(e) => {
-                if (e.target.value.trim() !== '') {
-                  setDisplayName(e.target.value)
+                setDisplayName(e.target.value)
+                if (nodeData?.node.id) {
+                  onNameChange?.(nodeData.node.id, e.target.value)
                 }
               }}
               onKeyDown={(e) => {
@@ -211,7 +226,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
           {properties.map((property: INodeProperty) => {
             return (
               <NodeProperty
-                key={property.name}
+                key={`${nodeData?.node.id}-${property.name}`}
                 property={property}
                 parameter={parameters}
                 onChange={onChangeParameters}
@@ -230,6 +245,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
             Cancel
           </Button>
           <Button
+            disabled={displayName.trim() === ''}
             onClick={() => {
               handleDrawerOpenChange(false)
               callback(nodeData?.node.id as string, parameters, displayName)
