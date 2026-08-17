@@ -109,14 +109,9 @@ export type UpdateWorkflowInput = z.infer<typeof updateWorkflowSchema>
 
 /**
  * Execute workflow schema
- * NOTE: `initial_data` is expected to include `additionalProp1` per API contract.
  */
 export const executeWorkflowSchema = z.object({
-  initial_data: z
-    .object({
-      additionalProp1: z.record(z.string(), z.unknown()),
-    })
-    .passthrough(),
+  initial_data: z.record(z.string(), z.unknown()).optional(),
   manual: z.boolean(),
 })
 

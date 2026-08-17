@@ -819,7 +819,6 @@ const ReactFlowCanvasInner = (
       }
 
       const payload: ExecuteWorkflowInput = {
-        initial_data: { additionalProp1: {} },
         manual: false,
       }
 
