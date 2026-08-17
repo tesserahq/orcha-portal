@@ -868,6 +868,14 @@ const ReactFlowCanvasInner = (
     [isExecution, nodes]
   )
 
+  const handleNodeNameChange = useCallback((nodeId: string, displayName: string) => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.id === nodeId ? { ...node, data: { ...node.data, displayName } } : node
+      )
+    )
+  }, [])
+
   const handleNodeUpdate = useCallback(
     (nodeId: string, parameters: any, displayName: string) => {
       markDirty()
@@ -1141,6 +1149,7 @@ const ReactFlowCanvasInner = (
           onClose={handleConfigurationClose}
           onDelete={handleNodeDelete}
           onOpenChange={setIsNodePropertiesOpen}
+          onNameChange={handleNodeNameChange}
         />
       )}
     </div>
