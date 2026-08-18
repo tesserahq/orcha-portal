@@ -75,8 +75,10 @@ const ToggleActiveDialog = ({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {isActive ? 'Disabling...' : 'Enabling...'}
                 </>
+              ) : isActive ? (
+                'Disable'
               ) : (
-                <>Confirm</>
+                'Enable'
               )}
             </Button>
           </div>
