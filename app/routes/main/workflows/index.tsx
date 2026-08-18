@@ -1,18 +1,23 @@
 import EmptyContent from '@/components/empty-content/empty-content'
 import { Pagination } from '@/components/data-table/data-pagination'
 import { AppPreloader } from '@/components/loader/pre-loader'
+import ToggleActiveDialog from '@/components/workflows/toggle-active-dialog'
 import { WorkflowCreatedBy } from '@/components/workflows/workflow-created-by'
 import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
 import { Card, CardContent } from '@/modules/shadcn/ui/card'
-import { useDeleteWorkflow, useWorkflows } from '@/resources/hooks/workflows/use-workflows'
+import {
+  useDeleteWorkflow,
+  useUpdateWorkflow,
+  useWorkflows,
+} from '@/resources/hooks/workflows/use-workflows'
 import { WorkflowType } from '@/resources/queries/workflows/workflow.type'
 import { ensureCanonicalPagination } from '@/utils/pagination.server'
 import { Badge } from '@shadcn/ui/badge'
 import { Button } from '@shadcn/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
-import { EllipsisVertical, EyeIcon, Trash2 } from 'lucide-react'
-import { useRef } from 'react'
+import { EllipsisVertical, EyeIcon, Power, PowerOff, Trash2 } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { Link, LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router'
 import { DateTime, NewButton } from 'tessera-ui/components'
 import DeleteConfirmation, {
@@ -44,6 +49,7 @@ export default function WorkflowsIndex() {
   const { token } = useApp()
   const navigate = useNavigate()
   const deleteConfirmationRef = useRef<DeleteConfirmationHandle>(null)
+  const [toggleTarget, setToggleTarget] = useState<WorkflowType | null>(null)
 
   const config = {
     apiUrl: apiUrl!,
@@ -71,6 +77,17 @@ export default function WorkflowsIndex() {
         await deleteWorkflow(workflow.id as string)
       },
     })
+  }
+
+  const { mutateAsync: updateWorkflow, isPending: isTogglingActive } = useUpdateWorkflow(config, {
+    onSuccess: () => setToggleTarget(null),
+  })
+
+  const handleToggleActiveClick = (workflow: WorkflowType) => setToggleTarget(workflow)
+
+  const handleConfirmToggleActive = async () => {
+    if (!toggleTarget?.id) return
+    await updateWorkflow({ id: toggleTarget.id, data: { is_active: !toggleTarget.is_active } })
   }
 
   if (isLoading) return <AppPreloader />
@@ -161,6 +178,14 @@ export default function WorkflowsIndex() {
                     </Button>
                     <Button
                       variant="ghost"
+                      className="flex w-full justify-start gap-2"
+                      disabled={isTogglingActive}
+                      onClick={() => handleToggleActiveClick(workflow)}>
+                      {workflow.is_active ? <PowerOff size={18} /> : <Power size={18} />}
+                      <span>{workflow.is_active ? 'Disable' : 'Enable'}</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
                       className="flex w-full justify-start gap-2 hover:bg-destructive
                         hover:text-destructive-foreground"
                       onClick={() => handleDeleteClick(workflow)}>
@@ -188,6 +213,15 @@ export default function WorkflowsIndex() {
       )}
 
       <DeleteConfirmation ref={deleteConfirmationRef} />
+
+      <ToggleActiveDialog
+        open={!!toggleTarget}
+        onOpenChange={(open) => !open && setToggleTarget(null)}
+        workflowName={toggleTarget?.name ?? ''}
+        isActive={!!toggleTarget?.is_active}
+        isLoading={isTogglingActive}
+        onConfirm={handleConfirmToggleActive}
+      />
     </div>
   )
 }
