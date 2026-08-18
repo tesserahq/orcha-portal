@@ -42,13 +42,28 @@ interface IProps {
   onNameChange?: (nodeId: string, displayName: string) => void
 }
 
+const isJsonLikeValue = (value: unknown): boolean => {
+  if (value !== null && typeof value === 'object') return true
+  if (typeof value !== 'string') return false
+
+  const trimmed = value.trim()
+  if (!trimmed || !/^[[{]/.test(trimmed)) return false
+
+  try {
+    const parsed = JSON.parse(trimmed)
+    return parsed !== null && typeof parsed === 'object'
+  } catch {
+    return false
+  }
+}
+
 const getFallbackPropertiesFromParameters = (
   parameters: Record<string, any> = {}
 ): INodeProperty[] => {
   return Object.entries(parameters).map(([name, value]) => ({
     name,
     display_name: name.replace(/_/g, ' '),
-    type: value !== null && typeof value === 'object' ? 'json' : 'string',
+    type: isJsonLikeValue(value) ? 'json' : 'string',
     default: value as never,
     description: '',
   }))

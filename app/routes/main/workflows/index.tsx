@@ -107,7 +107,7 @@ export default function WorkflowsIndex() {
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Workflows</h1>
         {!isLoading && data?.items?.length !== 0 && (
-          <NewButton label="New Source" onClick={() => navigate('/workflows/new')} />
+          <NewButton label="New Workflow" onClick={() => navigate('/workflows/new')} />
         )}
       </div>
 

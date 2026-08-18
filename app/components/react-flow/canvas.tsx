@@ -9,6 +9,7 @@ import {
 import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
 import { Badge } from '@/modules/shadcn/ui/badge'
+import { useNodeCategories } from '@/resources/hooks/nodes/use-nodes'
 import {
   useCreateWorkflow,
   useExecuteWorkflow,
@@ -20,7 +21,7 @@ import {
   UpdateWorkflowInput,
 } from '@/resources/queries/workflows/workflow.schema'
 import { WorkflowType } from '@/resources/queries/workflows/workflow.type'
-import { INodeInput } from '@/types/workflow'
+import { INodeInput, INodeProperty } from '@/types/workflow'
 import { cn } from '@shadcn/lib/utils'
 import { Button } from '@shadcn/ui/button'
 import { Switch } from '@shadcn/ui/switch'
@@ -45,6 +46,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -125,6 +127,14 @@ const ReactFlowCanvasInner = (
       setIsExecuting(false)
     },
   })
+  const { data: nodeCategoriesData } = useNodeCategories(config, { enabled: !isExecution })
+  const nodePropertiesByKind = useMemo(() => {
+    const map = new Map<string, INodeProperty[]>()
+    ;(nodeCategoriesData?.items ?? []).forEach((category) =>
+      (category.nodes ?? []).forEach((node) => map.set(node.id, node.properties))
+    )
+    return map
+  }, [nodeCategoriesData])
   const isSaving = isCreating || isUpdating
   const shouldHideSaveButton = isNodeCategoriesOpen || isNodePropertiesOpen
   const nodeTypes = {
@@ -246,6 +256,10 @@ const ReactFlowCanvasInner = (
             kind: node.kind,
             isExecution: isExecution,
             parameters: node.parameters,
+            properties:
+              Array.isArray(node.properties) && node.properties.length > 0
+                ? node.properties
+                : nodePropertiesByKind.get(node.kind),
             firstNode: node.ui_settings.firstNode,
             lastNode: isExecution && node.name === lastNodeItem.name,
             icon: node?.ui_settings?.icon,
@@ -278,7 +292,7 @@ const ReactFlowCanvasInner = (
 
       return [...reactFlowNodes, addNode]
     },
-    [isExecution, handleOpenAddDialog]
+    [isExecution, handleOpenAddDialog, nodePropertiesByKind]
   )
 
   const collectNodesForRemoval = useCallback((deleted: Node[], nodesSnapshot: Node[]): Node[] => {
@@ -961,7 +975,7 @@ const ReactFlowCanvasInner = (
       <div
         className="absolute -top-1 left-0 z-1 flex w-full animate-slide-down items-center
           justify-between border-b bg-card py-3 pl-4 pr-8">
-        <div className="max-w-[70%] shrink-0">
+        <div className="max-w-[100%] w-1/2 shrink-0">
           {isExecution ? (
             <h1 className="text-lg font-semibold">{workflowPayload?.name}</h1>
           ) : (
