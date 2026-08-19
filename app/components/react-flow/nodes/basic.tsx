@@ -80,8 +80,8 @@ export default function NodeBasic({ data, id }: NodeBasicProps) {
       {!data?.firstNode && <Handle type="target" position={Position.Left} id={id} />}
       <span
         className={cn(
-          `absolute -bottom-5 left-1/2 z-50 w-20 -translate-x-1/2 text-center text-[7px]!
-          font-medium`,
+          `absolute -bottom-5 left-1/2 z-50 w-20 top-full leading-[10px] mt-2 -translate-x-1/2
+          text-center text-[7px]! font-medium`,
           data?.status === 'error' && 'text-destructive'
         )}>
         {data?.displayName}

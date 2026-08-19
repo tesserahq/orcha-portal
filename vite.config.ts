@@ -10,6 +10,7 @@ export default defineConfig({
       '@': resolve(__dirname, './app'),
       'react-router-dom/server': 'react-router',
     },
+    dedupe: ['react', 'react-dom', '@auth0/auth0-react'],
   },
   plugins: [reactRouter(), tsconfigPaths(), tailwindcss()],
 })

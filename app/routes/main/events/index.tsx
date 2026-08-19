@@ -4,7 +4,6 @@ import EmptyContent from '@/components/empty-content/empty-content'
 import DialogPreviewJson from '@/components/json/preview'
 import { Button } from '@shadcn/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
-import { useApp } from '@/context/AppContext'
 import DeleteConfirmation, {
   type DeleteConfirmationHandle,
 } from '@/components/delete-confirmation/delete-confirmation'
@@ -17,7 +16,7 @@ import { LoaderFunctionArgs } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Ellipsis, EyeIcon, FileJson, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useRef } from 'react'
-import { DateTime } from 'tessera-ui'
+import { DateTime, useApp } from 'tessera-ui'
 
 export function loader({ request }: LoaderFunctionArgs) {
   const canonical = ensureCanonicalPagination(request, {
@@ -40,7 +39,7 @@ export default function EventsIndex() {
     size: number
     page: number
   }
-  const { token, isLoading: appLoading } = useApp()
+  const { token, isLoadingIdenties: appLoading } = useApp()
   const navigate = useNavigate()
   const dialogRef = useRef<React.ElementRef<typeof DialogPreviewJson>>(null)
   const deleteConfirmationRef = useRef<DeleteConfirmationHandle>(null)

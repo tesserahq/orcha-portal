@@ -6,7 +6,7 @@ import {
   WorkflowExecutionHistoryPanel,
   type WorkflowExecutionHistoryPanelProps,
 } from '@/components/workflows/workflow-execution-history-panel'
-import { useApp } from '@/context/AppContext'
+import { useApp } from 'tessera-ui'
 import { NodeENVType } from '@/libraries/fetch'
 import { Badge } from '@/modules/shadcn/ui/badge'
 import { useNodeCategories } from '@/resources/hooks/nodes/use-nodes'

@@ -7,7 +7,7 @@ import DeleteConfirmation, {
 import EmptyContent from '@/components/empty-content/empty-content'
 import { Button } from '@shadcn/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn/ui/popover'
-import { useApp } from '@/context/AppContext'
+import { useApp } from 'tessera-ui'
 import { NodeENVType } from '@/libraries/fetch'
 import { useDeleteSource, useSources } from '@/resources/hooks/sources/use-sources'
 import { SourceType } from '@/resources/queries/sources/source.type'
@@ -40,7 +40,7 @@ export default function SourcesIndex() {
     size: number
     page: number
   }
-  const { token, isLoading: appLoading } = useApp()
+  const { token, isLoadingIdenties: appLoading } = useApp()
   const navigate = useNavigate()
   const deleteConfirmationRef = useRef<DeleteConfirmationHandle>(null)
 

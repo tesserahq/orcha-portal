@@ -17,7 +17,7 @@ import { cn } from '@shadcn/lib/utils'
 import { Node } from '@xyflow/react'
 import { Trash2, X } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useState } from 'react'
-import { useApp } from '@/context/AppContext'
+import { useApp } from 'tessera-ui'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { useParams } from 'react-router'
 

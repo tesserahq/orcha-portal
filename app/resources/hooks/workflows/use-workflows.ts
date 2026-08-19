@@ -121,13 +121,13 @@ export function useCreateWorkflow(
 ) {
   const queryClient = useQueryClient()
 
-  if (!config.token) {
-    throw new QueryError('Token is required', 'TOKEN_REQUIRED')
-  }
-
   return useMutation({
     mutationFn: async (data: CreateWorkflowInput) => {
       try {
+        if (!config.token) {
+          throw new QueryError('Token is required', 'TOKEN_REQUIRED')
+        }
+
         return await createWorkflow(config, data)
       } catch (error: any) {
         throw new QueryError(error)
@@ -163,13 +163,13 @@ export function useUpdateWorkflow(
 ) {
   const queryClient = useQueryClient()
 
-  if (!config.token) {
-    throw new QueryError('Token is required', 'TOKEN_REQUIRED')
-  }
-
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateWorkflowInput }) => {
       try {
+        if (!config.token) {
+          throw new QueryError('Token is required', 'TOKEN_REQUIRED')
+        }
+
         return await updateWorkflow(config, id, data)
       } catch (error: any) {
         throw new QueryError(error)
@@ -205,13 +205,13 @@ export function useDeleteWorkflow(
 ) {
   const queryClient = useQueryClient()
 
-  if (!config.token) {
-    throw new QueryError('Token is required', 'TOKEN_REQUIRED')
-  }
-
   return useMutation({
     mutationFn: async (id: string) => {
       try {
+        if (!config.token) {
+          throw new QueryError('Token is required', 'TOKEN_REQUIRED')
+        }
+
         return await deleteWorkflow(config, id)
       } catch (error: any) {
         throw new QueryError(error)

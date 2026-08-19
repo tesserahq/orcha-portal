@@ -1,22 +1,11 @@
-import { AppPreloader } from '@/components/loader/pre-loader'
 import { SITE_CONFIG } from '@/constants/brand'
-import { useApp } from '@/context/AppContext'
 import { useRequestInfo } from '@/hooks/useRequestInfo'
 import { ROUTE_PATH as THEME_PATH } from '@/routes/resources/update-theme'
 import { CalendarCog, CodeSquare, Workflow } from 'lucide-react'
-import { Outlet, useLoaderData, useLocation, useParams, useSubmit } from 'react-router'
-import { Layout, MainItemProps, TesseraProvider } from 'tessera-ui'
-
-export function loader() {
-  const identiesApiUrl = process.env.IDENTIES_API_URL || process.env.API_URL
-
-  return { identiesApiUrl }
-}
+import { Outlet, useLocation, useParams, useSubmit } from 'react-router'
+import { Layout, MainItemProps } from 'tessera-ui'
 
 export default function PrivateLayout() {
-  const { identiesApiUrl } = useLoaderData<typeof loader>()
-
-  const { isLoading, token } = useApp()
   const requestInfo = useRequestInfo()
   const submit = useSubmit()
   const params = useParams()
@@ -57,28 +46,21 @@ export default function PrivateLayout() {
     location.pathname === '/workflows/new' ||
     location.pathname === '/sources/new'
 
-  if (isLoading) {
-    // Display loading screen when auth0 isLoading true
-    return <AppPreloader className="min-h-screen" />
-  }
-
   return (
-    <TesseraProvider identiesApiUrl={identiesApiUrl!} token={token ?? ''}>
-      <Layout.Main menuItems={menuItems} collapseSidebar={shouldCollapseSidebar}>
-        <div className="flex min-h-0 h-full flex-col">
-          <Layout.Header
-            actionLogout={() => {}}
-            actionProfile={() => {}}
-            defaultLogo="/images/logo.png"
-            onSetTheme={(theme) => onSetTheme(theme)}
-            selectedTheme={requestInfo.userPrefs.theme || 'system'}
-            title={SITE_CONFIG.siteTitle}
-          />
-          <div className="min-h-0 flex-1 overflow-auto">
-            <Outlet />
-          </div>
+    <Layout.Main menuItems={menuItems} collapseSidebar={shouldCollapseSidebar}>
+      <div className="flex min-h-0 h-full flex-col">
+        <Layout.Header
+          actionLogout={() => {}}
+          actionProfile={() => {}}
+          defaultLogo="/images/logo.png"
+          onSetTheme={(theme) => onSetTheme(theme)}
+          selectedTheme={requestInfo.userPrefs.theme || 'system'}
+          title={SITE_CONFIG.siteTitle}
+        />
+        <div className="min-h-0 flex-1 overflow-auto">
+          <Outlet />
         </div>
-      </Layout.Main>
-    </TesseraProvider>
+      </div>
+    </Layout.Main>
   )
 }

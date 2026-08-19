@@ -3,7 +3,6 @@ import { Pagination } from '@/components/data-table/data-pagination'
 import { AppPreloader } from '@/components/loader/pre-loader'
 import ToggleActiveDialog from '@/components/workflows/toggle-active-dialog'
 import { WorkflowCreatedBy } from '@/components/workflows/workflow-created-by'
-import { useApp } from '@/context/AppContext'
 import { NodeENVType } from '@/libraries/fetch'
 import { Card, CardContent } from '@/modules/shadcn/ui/card'
 import {
@@ -23,6 +22,7 @@ import { DateTime, NewButton } from 'tessera-ui/components'
 import DeleteConfirmation, {
   type DeleteConfirmationHandle,
 } from 'tessera-ui/components/delete-confirmation'
+import { useApp } from 'tessera-ui'
 import Separator from '@/modules/shadcn/ui/separator'
 
 export function loader({ request }: LoaderFunctionArgs) {
