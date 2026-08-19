@@ -2,14 +2,13 @@ import { DetailContent } from '@/components/detail-content'
 import EmptyContent from '@/components/empty-content/empty-content'
 import { AppPreloader } from '@/components/loader/pre-loader'
 import Markdown from '@/components/markdown/markdown'
-import { useApp } from '@/context/AppContext'
 import { Badge } from '@/modules/shadcn/ui/badge'
 import { Button } from '@/modules/shadcn/ui/button'
 import { useEvent } from '@/resources/hooks/events/use-events'
 import { cn } from '@/utils/misc'
 import { SquareArrowRight } from 'lucide-react'
 import { useLoaderData, useNavigate } from 'react-router'
-import { DateTime, ResourceID } from 'tessera-ui'
+import { DateTime, ResourceID, useApp } from 'tessera-ui'
 
 export async function loader({ params }: { params: { eventID: string } }) {
   const apiUrl = process.env.API_URL

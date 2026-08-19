@@ -1,4 +1,3 @@
-import { Auth0Provider } from '@auth0/auth0-react'
 import type { LinksFunction, LoaderFunctionArgs } from 'react-router'
 import {
   data,
@@ -9,6 +8,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useNavigate,
 } from 'react-router'
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 
@@ -36,9 +36,9 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ProgressBar } from './components/loader/progress-bar'
-import { AppProvider } from './context/AppContext'
 import { ReactQueryProvider } from './modules/react-query'
 import { metaObject } from './utils/helpers/meta.helpers'
+import { AuthProvider } from 'tessera-ui'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 library.add(fas as any)
@@ -84,13 +84,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const organizationID = process.env.AUTH0_ORGANIZATION_ID
   const hostUrl = process.env.HOST_URL
   const identiesApiUrl = process.env.IDENTIES_API_URL
-  const nodeEnv = process.env.NODE_ENV
 
   return data(
     {
       hostUrl,
       identiesApiUrl,
-      nodeEnv,
       user,
       toast,
       csrfToken,
@@ -154,20 +152,12 @@ function Document({
 }
 
 export default function AppWithProviders() {
-  const {
-    toast,
-    csrfToken,
-    clientID,
-    domain,
-    audience,
-    hostUrl,
-    organizationID,
-    identiesApiUrl,
-    nodeEnv,
-  } = useLoaderData<typeof loader>()
+  const { toast, csrfToken, clientID, domain, audience, hostUrl, organizationID, identiesApiUrl } =
+    useLoaderData<typeof loader>()
 
   const nonce = useNonce()
   const theme = useTheme()
+  const navigate = useNavigate()
 
   // Renders toast (if any).
   useToast(toast)
@@ -176,21 +166,21 @@ export default function AppWithProviders() {
     <Document nonce={nonce} theme={theme}>
       <ProgressBar />
       <AuthenticityTokenProvider token={csrfToken}>
-        <Auth0Provider
-          domain={domain ?? ''}
-          clientId={clientID ?? ''}
-          authorizationParams={{
-            redirect_uri: hostUrl || 'http://localhost:3000',
-            organization: organizationID,
-            audience: audience,
-          }}>
-          {/* To check if the route is a public gazette share page */}
-          <AppProvider identiesApiUrl={identiesApiUrl!} nodeEnv={nodeEnv}>
-            <ReactQueryProvider>
-              <Outlet />
-            </ReactQueryProvider>
-          </AppProvider>
-        </Auth0Provider>
+        <AuthProvider
+          auth0={{
+            domain: domain ?? '',
+            clientId: clientID ?? '',
+            audience: audience ?? '',
+            organizationID: organizationID ?? '',
+            redirectUri: hostUrl || 'http://localhost:3000',
+          }}
+          identiesApiUrl={identiesApiUrl!}
+          onUnauthenticated={() => navigate('/')}
+          requireAuth={false}>
+          <ReactQueryProvider>
+            <Outlet />
+          </ReactQueryProvider>
+        </AuthProvider>
       </AuthenticityTokenProvider>
     </Document>
   )

@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { AppPreloader } from '@/components/loader/pre-loader'
 import ReactFlowCanvas, { type ReactFlowCanvasHandle } from '@/components/react-flow/canvas'
 import UnsavedChangesDialog from '@/components/workflows/unsaved-changes-dialog'
-import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi } from '@/libraries/fetch'
 import { INodeInput, IWorkflow } from '@/types/workflow'
 import { ActionFunctionArgs } from 'react-router'
 import { useBlocker, useLoaderData, useParams } from 'react-router'
 import { redirectWithToast } from '@/utils/toast.server'
+import { useApp } from 'tessera-ui'
 
 export function loader() {
   const apiUrl = process.env.API_URL

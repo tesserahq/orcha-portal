@@ -1,4 +1,4 @@
-import { useApp } from '@/context/AppContext'
+import { useApp } from 'tessera-ui'
 import { sourceSchema } from '@/schemas/source'
 import { useLoaderData, useNavigate, useNavigation } from 'react-router'
 import { LoaderFunctionArgs } from 'react-router'
@@ -23,7 +23,7 @@ export default function SourcesEdit() {
   }
   const navigation = useNavigation()
   const navigate = useNavigate()
-  const { token, isLoading: appLoading } = useApp()
+  const { token, isLoadingIdenties: appLoading } = useApp()
 
   const config = {
     apiUrl: apiUrl!,

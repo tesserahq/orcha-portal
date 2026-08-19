@@ -2,7 +2,7 @@
 import { Button } from '@shadcn/ui/button'
 import Separator from '@shadcn/ui/separator'
 import { Skeleton } from '@shadcn/ui/skeleton'
-import { useApp } from '@/context/AppContext'
+import { useApp } from 'tessera-ui'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi, NodeENVType } from '@/libraries/fetch'
 import { IWorkflowNode, IWorkflowNodeCategory } from '@/types/workflow'

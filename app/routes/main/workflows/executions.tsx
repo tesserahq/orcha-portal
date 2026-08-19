@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { AppPreloader } from '@/components/loader/pre-loader'
 import ReactFlowCanvas from '@/components/react-flow/canvas'
-import { useApp } from '@/context/AppContext'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi } from '@/libraries/fetch'
 import {
@@ -14,6 +13,7 @@ import { useWorkflow, useWorkflowExecutions } from '@/resources/hooks/workflows/
 import { redirectWithToast } from '@/utils/toast.server'
 import { ActionFunctionArgs } from 'react-router'
 import { Link, useLoaderData, useParams } from 'react-router'
+import { useApp } from 'tessera-ui'
 
 export function loader() {
   const apiUrl = process.env.API_URL
@@ -135,8 +135,6 @@ export default function WorkflowExecution() {
         }
       })
       .filter(Boolean) as NodeInputType[]
-
-    console.log('nodesFromExecution ', nodesFromExecution)
 
     return nodesFromExecution
   }, [workflowNodes, selectedExecutionNodeResult])

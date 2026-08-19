@@ -1,8 +1,7 @@
-import { useApp } from '@/context/AppContext'
 import useBreadcrumb from '@/hooks/useBreadcrumb'
 import { FileChartLine } from 'lucide-react'
 import { Outlet, useLoaderData, useLocation, useParams } from 'react-router'
-import { DetailItemsProps, Layout } from 'tessera-ui'
+import { DetailItemsProps, Layout, useApp } from 'tessera-ui'
 
 export function loader() {
   const apiUrl = process.env.API_URL
