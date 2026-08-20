@@ -261,7 +261,7 @@ const ReactFlowCanvasInner = (
                 ? node.properties
                 : nodePropertiesByKind.get(node.kind),
             firstNode: node.ui_settings.firstNode,
-            lastNode: isExecution && node.name === lastNodeItem.name,
+            lastNode: isExecution && node.ui_settings.id === lastNodeItem.ui_settings.id,
             icon: node?.ui_settings?.icon,
             displayName: node?.ui_settings?.displayName,
             icon_color: node.ui_settings.icon_color,
@@ -961,6 +961,16 @@ const ReactFlowCanvasInner = (
       setNodes([])
     }
   }, [initialNodes, convertInitialNodesToReactFlowNodes, isExecution])
+
+  useEffect(() => {
+    if (initialEdges.length > 0) {
+      setEdges(initialEdges)
+      return
+    }
+    if (isExecution) {
+      setEdges([])
+    }
+  }, [initialEdges, isExecution])
 
   useEffect(() => {
     if (workflow) {

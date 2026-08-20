@@ -5,15 +5,15 @@ import { AppPreloader } from '@/components/loader/pre-loader'
 import ReactFlowCanvas from '@/components/react-flow/canvas'
 import { useHandleApiError } from '@/hooks/useHandleApiError'
 import { fetchApi } from '@/libraries/fetch'
+import { useWorkflow, useWorkflowExecutions } from '@/resources/hooks/workflows/use-workflows'
 import {
   NodeInputType,
   WorkflowExecutionNodeResult,
 } from '@/resources/queries/workflows/workflow.type'
-import { useWorkflow, useWorkflowExecutions } from '@/resources/hooks/workflows/use-workflows'
 import { redirectWithToast } from '@/utils/toast.server'
-import { ActionFunctionArgs } from 'react-router'
-import { Link, useLoaderData, useParams } from 'react-router'
+import { ActionFunctionArgs, useLoaderData, useParams } from 'react-router'
 import { useApp } from 'tessera-ui'
+import { useNodeCategories } from '@/resources/hooks/nodes/use-nodes'
 
 export function loader() {
   const apiUrl = process.env.API_URL
@@ -47,6 +47,12 @@ export default function WorkflowExecution() {
   } = useWorkflowExecutions(config, params.workflow_id!, {
     enabled: !!token && !!params.workflow_id,
   })
+
+  const { data: nodeCategories, isLoading: isLoadingNodeCategories } = useNodeCategories(config, {
+    enabled: !!token,
+  })
+  const nodeCatalogs = nodeCategories?.items.flatMap((item) => item.nodes)
+
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -99,10 +105,6 @@ export default function WorkflowExecution() {
   }, [selectedExecution])
 
   const mergedExecutionNodes = useMemo(() => {
-    if (selectedExecutionNodeResult.length === 0) {
-      return []
-    }
-
     const workflowNodeMap = new Map<string, NodeInputType>()
     workflowNodes.forEach((node) => {
       const workflowNodeId = node?.ui_settings?.id
@@ -113,21 +115,20 @@ export default function WorkflowExecution() {
     })
 
     const nodesFromExecution = selectedExecutionNodeResult
-      .map((nodeResultItem: WorkflowExecutionNodeResult) => {
-        const matchedNode =
-          workflowNodeMap.get(nodeResultItem?.node_id) ??
-          workflowNodeMap.get(nodeResultItem?.node_name)
-
-        if (!matchedNode) {
-          return null
-        }
+      .map((nodeResultItem: WorkflowExecutionNodeResult, index) => {
+        const nodeCatalog = nodeCatalogs?.find((c) => c?.id === nodeResultItem?.node_kind)
 
         return {
-          ...matchedNode,
-          name: nodeResultItem?.node_name || matchedNode.name,
-          kind: nodeResultItem?.node_kind || matchedNode.kind,
+          name: nodeResultItem?.node_name,
+          kind: nodeResultItem?.node_kind,
           ui_settings: {
-            ...matchedNode.ui_settings,
+            id: nodeResultItem.node_id,
+            displayName: nodeCatalog?.display_name,
+            firstNode: index === 0,
+            icon: nodeCatalog?.icon,
+            icon_color: nodeCatalog?.icon_color,
+            type: 'basic',
+            position: { x: index * 150, y: 0 },
             status: nodeResultItem.status,
             error_message: nodeResultItem.error_message,
             timestamp: nodeResultItem.timestamp,
@@ -137,30 +138,19 @@ export default function WorkflowExecution() {
       .filter(Boolean) as NodeInputType[]
 
     return nodesFromExecution
-  }, [workflowNodes, selectedExecutionNodeResult])
+  }, [workflowNodes, selectedExecutionNodeResult, nodeCatalogs])
 
-  const executionEdges =
-    mergedExecutionNodes?.flatMap((node: NodeInputType) => {
-      const nodeEdges = Array.isArray(node?.ui_settings?.edges) ? node.ui_settings.edges : []
+  const executionEdges = useMemo(() => {
+    return selectedExecutionNodeResult.slice(1).map((nodeResultItem, index) => {
+      const previousNode = selectedExecutionNodeResult[index]
 
-      if (nodeEdges.length > 0) {
-        return nodeEdges
+      return {
+        id: `${previousNode?.node_id}->${nodeResultItem.node_id}`,
+        source: previousNode.node_id,
+        target: nodeResultItem.node_id,
       }
-
-      const sourceId = node?.ui_settings?.id ?? node?.name
-
-      if (!sourceId) {
-        return []
-      }
-
-      return [
-        {
-          id: 'add',
-          source: sourceId,
-          target: 'add',
-        },
-      ]
-    }) ?? []
+    })
+  }, [selectedExecutionNodeResult])
 
   useEffect(() => {
     if (executionItems.length === 0) {
