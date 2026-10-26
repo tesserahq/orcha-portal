@@ -37,8 +37,7 @@ export function SidebarPanel({ menuItems }: ISidebarPanelProps) {
                 <div key={item.path}>
                   <li
                     className={cn(
-                      `flex items-center justify-between overflow-hidden rounded hover:bg-slate-50
-                      dark:hover:bg-background`,
+                      `flex items-center justify-between overflow-hidden rounded hover:bg-muted`,
                       isMenuActive(item.path) && 'bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent'
                     )}>
                     <Link
@@ -50,7 +49,7 @@ export function SidebarPanel({ menuItems }: ISidebarPanelProps) {
                   </li>
 
                   {item.divider && (
-                    <hr className="my-2 border-t border-slate-200 dark:border-slate-700" />
+                    <hr className="my-2 border-t border-border" />
                   )}
                 </div>
               ))}

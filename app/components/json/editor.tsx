@@ -178,7 +178,7 @@ export default function JsonEditor({
                 spellCheck={false}
                 className="absolute inset-0 h-full w-full resize-none bg-transparent px-3 py-1
                   font-mono text-sm leading-6 text-foreground outline-hidden selection:bg-primary/20
-                  dark:selection:bg-primary selection:text-black dark:selection:text-white"
+                  dark:selection:bg-primary dark:selection:text-primary-foreground"
                 style={{ tabSize: 2 }}
               />
             </div>

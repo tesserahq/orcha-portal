@@ -49,18 +49,18 @@ export default function DeleteConfirmation({
           <div
             className="-mt-16 flex h-16 w-16 items-center justify-center rounded-full bg-destructive
               p-3">
-            <Trash2 size={100} className="text-white" />
+            <Trash2 size={100} className="text-destructive-foreground" />
           </div>
           <DialogTitle className="hidden"></DialogTitle>
         </DialogHeader>
         <DialogDescription className="px-3" asChild>
           <div className="flex flex-col items-center">
-            <h1 className="text-3xl font-semibold text-black dark:text-secondary-foreground">
+            <h1 className="text-3xl font-semibold text-foreground">
               {title}
             </h1>
             <p
               className={cn(
-                'mt-3 text-center text-lg text-black dark:text-secondary-foreground',
+                'mt-3 text-center text-lg text-foreground',
                 !showInputValidation && 'mb-3 text-base text-secondary-foreground'
               )}>
               {description}
@@ -72,7 +72,7 @@ export default function DeleteConfirmation({
                 </p>
                 <Input
                   name="delete_confirm"
-                  className="text-center text-black dark:text-white"
+                  className="text-center text-foreground"
                   value={confirmMsg}
                   onChange={(e) => setConfirmMsg(e.target.value)}
                 />

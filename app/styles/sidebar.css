@@ -30,7 +30,7 @@
 
 .sidebar .sidebar-nav li a:hover,
 .sidebar .sidebar-nav li a:focus {
-  @apply dark:bg-background bg-slate-50;
+  @apply bg-muted;
 }
 
 .sidebar .sidebar-nav li a.active,

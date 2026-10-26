@@ -93,6 +93,7 @@ export default function WorkflowsIndex() {
   if (isLoading) return <AppPreloader />
 
   if (error) {
+    console.log(error, 'EEE')
     return (
       <EmptyContent
         image="/images/empty-workflows.png"
@@ -135,20 +136,20 @@ export default function WorkflowsIndex() {
                   <Link
                     to={`/workflows/${workflow.id}`}
                     title={workflow.name}
-                    className="mb-1 block w-full truncate text-base font-medium text-black
-                      hover:text-primary hover:underline dark:text-primary-foreground">
+                    className="mb-1 block w-full truncate text-base font-medium text-foreground
+                      hover:text-primary hover:underline">
                     {workflow.name.length > 100
                       ? `${workflow.name.slice(0, 100)}...`
                       : workflow.name}
                   </Link>
 
                   <div
-                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500
-                      dark:text-slate-400">
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs
+                      text-muted-foreground">
                     <WorkflowCreatedBy
                       creator={workflow.created_by}
                       className="max-w-full"
-                      textClassName="text-xs text-slate-500 dark:text-slate-400"
+                      textClassName="text-xs text-muted-foreground"
                     />
                     <Separator className="h-3 w-0.5" />
                     <div className="flex items-center gap-1">

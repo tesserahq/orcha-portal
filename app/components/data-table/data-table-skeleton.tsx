@@ -17,9 +17,9 @@ export const TableCellSkeletons = <TData,>({
           return (
             <TableCell
               key={`${header.id}-${skeletonIndex}`}
-              className="py-2 ps-4 font-semibold text-slate-800 dark:text-foreground"
+              className="py-2 ps-4 font-semibold text-foreground"
               style={{ width: header.column.columnDef.size }}>
-              <div className="h-6 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-500"></div>
+              <div className="h-6 w-full animate-pulse rounded bg-muted"></div>
             </TableCell>
           )
         })}

@@ -39,7 +39,7 @@ export function SidebarPanelMin({ menuItems }: ISidebarPanelProps) {
                   </li>
 
                   {item.divider && (
-                    <hr className="my-2 border-t border-slate-200 dark:border-slate-700" />
+                    <hr className="my-2 border-t border-border" />
                   )}
                 </div>
               ))}

@@ -127,7 +127,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-border, currentcolor);
   }
 }
 
@@ -353,11 +353,11 @@ nav.header .header-container {
 
   .scrollbar-sm:hover::-webkit-scrollbar-thumb,
   .scrollbar-sm:focus-within::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-slate-300/80;
+    @apply rounded-full bg-muted-foreground/40;
   }
 
   .scrollbar-sm::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+    @apply bg-muted-foreground/70;
   }
 }
 
@@ -389,7 +389,7 @@ nav.header .header-container {
 /* app-preloader */
 .app-preloader .app-preloader-inner::after,
 .app-preloader .app-preloader-inner::before {
-  @apply absolute top-0 left-0 h-full w-full rounded-full bg-slate-300/25 dark:bg-muted/50 content-[''];
+  @apply absolute top-0 left-0 h-full w-full rounded-full bg-muted/50 content-[''];
   animation: spinner-grow 3s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
 }
 
@@ -398,16 +398,16 @@ nav.header .header-container {
 }
 
 .required::after {
-  @apply ml-0.5 font-bold text-red-500;
+  @apply ml-0.5 font-bold text-destructive;
   content: '*';
 }
 
 .input-error {
-  @apply border-red-500! transition-all duration-200 ease-in-out hover:border-red-500 focus-visible:border-red-500! focus-visible:ring-red-500! dark:border-red-400! dark:focus-visible:ring-red-400!;
+  @apply border-destructive! transition-all duration-200 ease-in-out hover:border-destructive focus-visible:border-destructive! focus-visible:ring-destructive!;
 }
 
 .error-message {
-  @apply animate-slide-up text-xs text-red-500 dark:text-red-400;
+  @apply animate-slide-up text-xs text-destructive;
 }
 
 .button-link {

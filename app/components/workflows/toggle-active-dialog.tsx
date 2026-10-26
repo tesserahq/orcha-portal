@@ -40,12 +40,12 @@ const ToggleActiveDialog = ({
         <DialogDescription className="px-3" asChild>
           <div className="flex flex-col items-center max-w-md wrap-break-word">
             <h1
-              className="dark:text-secondary-foreground text-center text-3xl font-semibold
-                text-black">
+              className="text-center text-3xl font-semibold
+                text-foreground">
               {isActive ? 'Disable' : 'Enable'} &quot;{workflowName}&quot;?
             </h1>
             <p
-              className="dark:text-secondary-foreground mt-3 text-center text-base text-black
+              className="mt-3 text-center text-base text-foreground
                 max-w-sm wrap-break-word overflow-hidden text-ellipsis">
               {isActive
                 ? "Once disabled, this workflow will be paused and won't run until you enable it again."
