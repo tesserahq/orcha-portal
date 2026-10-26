@@ -126,7 +126,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       footerAction,
       modalPopover = false,
       selectedDisplay = 'keyValue',
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       asChild = false,
       className,
       ...props

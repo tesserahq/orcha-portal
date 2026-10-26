@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ProfileMenu } from '@/components/profile-menu/profile-menu'
 import { Avatar, AvatarImage } from '@shadcn/ui/avatar'
 import Separator from '@shadcn/ui/separator'
