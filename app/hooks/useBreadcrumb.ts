@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQueries } from '@tanstack/react-query'
+import { type QueryKey, useQueries } from '@tanstack/react-query'
 import { NodeENVType } from '@/libraries/fetch'
 import { BreadcrumbItemData } from 'tessera-ui'
 import { getEvent } from '@/resources/queries/events/event.queries'
 import { IQueryConfig } from '@/resources/queries'
 import { getSource } from '@/resources/queries/sources/source.queries'
 import { generateBreadcrumbs } from '@/utils/helpers/breadcrumb'
+import { queryKeys } from '@/modules/react-query'
+import { eventQueryKeys } from '@/resources/hooks/events'
+import { sourceQueryKeys } from '@/resources/hooks/sources'
 
 /**
  * Resource state per breadcrumb
@@ -32,24 +35,27 @@ interface BreadcrumbConfigType {
  */
 type BreadcrumbQueryConfig = {
   paramKey: string
-  queryKey: string[]
+  queryKey: QueryKey
   queryFn: () => Promise<any>
   enabled: boolean
   staleTime: number
 }
-
 /**
  * Fetcher registry (NO HOOKS)
  */
 const breadcrumbFetchers = {
-  eventID: (config: IQueryConfig, id: string) => getEvent(config, id),
-  source_id: (config: IQueryConfig, id: string) => getSource(config, id),
+  eventID: {
+    queryKey: eventQueryKeys.detail,
+    fetch: (config: IQueryConfig, id: string) => getEvent(config, id),
+  },
+  source_id: {
+    queryKey: sourceQueryKeys.detail,
+    fetch: (config: IQueryConfig, id: string) => getSource(config, id),
+  },
 }
 
 export default function useBreadcrumb(config: BreadcrumbConfigType): BreadcrumbItemData[] {
   const { pathname, params, apiUrl, nodeEnv, token } = config
-
-  if (!token) return []
 
   const pathParts = pathname.split('/').filter(Boolean)
 
@@ -60,15 +66,16 @@ export default function useBreadcrumb(config: BreadcrumbConfigType): BreadcrumbI
       if (!matched) return null
 
       const [paramKey] = matched
-      const fetcher = breadcrumbFetchers[paramKey as keyof typeof breadcrumbFetchers]
+      const id = part
+      const resolver = breadcrumbFetchers[paramKey as keyof typeof breadcrumbFetchers]
 
-      if (!fetcher) return null
+      if (!resolver) return null
 
       return {
         paramKey,
-        queryKey: ['breadcrumb', paramKey, part],
-        queryFn: () => fetcher({ apiUrl, token, nodeEnv }, part),
-        enabled: true,
+        queryKey: resolver.queryKey(id) as QueryKey,
+        queryFn: () => resolver.fetch({ apiUrl, token, nodeEnv }, id),
+        enabled: Boolean(token),
         staleTime: 5 * 60 * 1000,
       }
     })
