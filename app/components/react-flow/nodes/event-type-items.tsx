@@ -15,7 +15,7 @@ import { INodeProperty } from '@/types/workflow'
 
 interface IEventTypeItemsProps {
   property: INodeProperty
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   parameter: any
   onChange: (field: string, value: string) => void
   eventTypes?: string[]

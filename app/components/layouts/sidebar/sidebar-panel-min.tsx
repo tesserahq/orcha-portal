@@ -38,9 +38,7 @@ export function SidebarPanelMin({ menuItems }: ISidebarPanelProps) {
                     </TooltipProvider>
                   </li>
 
-                  {item.divider && (
-                    <hr className="my-2 border-t border-border" />
-                  )}
+                  {item.divider && <hr className="my-2 border-t border-border" />}
                 </div>
               ))}
             </ul>

@@ -33,9 +33,8 @@ export function ProfileMenu({ selectedTheme, onSetTheme, menus }: Props) {
 
   if (!user) {
     return (
-      <div
-        className="relative flex size-10 shrink-0 overflow-hidden rounded-full ring-1
-          ring-border">
+      <div className="relative flex size-10 shrink-0 overflow-hidden rounded-full ring-1
+        ring-border">
         <img src="/images/default-avatar.jpg" alt="default-avatar" />
       </div>
     )

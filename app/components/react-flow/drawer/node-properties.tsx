@@ -283,9 +283,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
           </DialogHeader>
           <DialogDescription className="px-3" asChild>
             <div className="flex flex-col items-center">
-              <h1 className="text-3xl font-semibold text-foreground">
-                Delete Node
-              </h1>
+              <h1 className="text-3xl font-semibold text-foreground">Delete Node</h1>
               <p className="mb-3 mt-3 text-center text-base text-secondary-foreground">
                 Are you sure you want to delete &quot;{nodeData?.title}&quot;? This action cannot be
                 undone.

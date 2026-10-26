@@ -26,8 +26,7 @@ export function SidebarPanel({ menuItems }: ISidebarPanelProps) {
   }
 
   return (
-    <div
-      className="sidebar-panel bg-sidebar-background flex h-full grow flex-col justify-between">
+    <div className="sidebar-panel bg-sidebar-background flex h-full grow flex-col justify-between">
       <div className="flex w-full flex-col">
         {/* Sidebar Panel Body */}
         <div className="sidebar-body">
@@ -37,8 +36,9 @@ export function SidebarPanel({ menuItems }: ISidebarPanelProps) {
                 <div key={item.path}>
                   <li
                     className={cn(
-                      `flex items-center justify-between overflow-hidden rounded hover:bg-muted`,
-                      isMenuActive(item.path) && 'bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent'
+                      'flex items-center justify-between overflow-hidden rounded hover:bg-muted',
+                      isMenuActive(item.path) &&
+                        'bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent'
                     )}>
                     <Link
                       to={item.path}
@@ -48,9 +48,7 @@ export function SidebarPanel({ menuItems }: ISidebarPanelProps) {
                     </Link>
                   </li>
 
-                  {item.divider && (
-                    <hr className="my-2 border-t border-border" />
-                  )}
+                  {item.divider && <hr className="my-2 border-t border-border" />}
                 </div>
               ))}
             </ul>

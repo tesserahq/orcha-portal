@@ -76,14 +76,8 @@ const DeleteConfirmation = forwardRef<DeleteConfirmationHandle, DeleteConfirmati
           </DialogHeader>
           <DialogDescription className="px-3" asChild>
             <div className="flex flex-col items-center">
-              <h1
-                className="text-center text-3xl font-semibold
-                  text-foreground">
-                {config.title}
-              </h1>
-              <p className="mt-3 text-center text-base text-foreground">
-                {config.description}
-              </p>
+              <h1 className="text-center text-3xl font-semibold text-foreground">{config.title}</h1>
+              <p className="mt-3 text-center text-base text-foreground">{config.description}</p>
             </div>
           </DialogDescription>
 

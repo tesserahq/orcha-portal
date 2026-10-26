@@ -55,9 +55,7 @@ export default function DeleteConfirmation({
         </DialogHeader>
         <DialogDescription className="px-3" asChild>
           <div className="flex flex-col items-center">
-            <h1 className="text-3xl font-semibold text-foreground">
-              {title}
-            </h1>
+            <h1 className="text-3xl font-semibold text-foreground">{title}</h1>
             <p
               className={cn(
                 'mt-3 text-center text-lg text-foreground',
