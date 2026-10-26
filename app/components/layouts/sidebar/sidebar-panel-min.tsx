@@ -16,7 +16,7 @@ export function SidebarPanelMin({ menuItems }: ISidebarPanelProps) {
 
   return (
     <div className="sidebar-panel-min">
-      <div className="flex h-full flex-col items-center bg-white dark:bg-sidebar-background">
+      <div className="flex h-full flex-col items-center bg-sidebar-background">
         {/* Sidebar Panel Min Body */}
         <div className="flex h-[calc(100%-4.5rem)] grow flex-col">
           <div className="is-scrollbar-hidden">
