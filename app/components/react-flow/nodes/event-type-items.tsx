@@ -15,7 +15,6 @@ import { INodeProperty } from '@/types/workflow'
 
 interface IEventTypeItemsProps {
   property: INodeProperty
-
   parameter: any
   onChange: (field: string, value: string) => void
   eventTypes?: string[]
