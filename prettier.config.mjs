@@ -16,7 +16,7 @@ const config = {
   arrowParens: 'always', // Consistent arrow function parentheses
 
   // React specific
-  endOfLine: 'lf', // Consistent line endings across platforms
+  endOfLine: 'auto', // Consistent line endings across platforms
   quoteProps: 'as-needed', // Only quote object properties when necessary
 
   // Plugins

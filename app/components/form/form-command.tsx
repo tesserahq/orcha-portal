@@ -171,11 +171,10 @@ const CommandSelect = ({
   )
 }
 
-interface FormCommandProps
-  extends Omit<
-    ComponentProps<typeof CommandDialog>,
-    'commandValue' | 'onCommandValueChange' | 'children'
-  > {
+interface FormCommandProps extends Omit<
+  ComponentProps<typeof CommandDialog>,
+  'commandValue' | 'onCommandValueChange' | 'children'
+> {
   field: string
   label?: string
   description?: string
