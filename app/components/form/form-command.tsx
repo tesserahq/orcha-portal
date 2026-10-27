@@ -149,8 +149,7 @@ const CommandSelect = ({
                   value={optionSearchValue}
                   disabled={option.disabled}
                   className={cn(
-                    `dark:hover:bg-navy-300/20 cursor-pointer text-base capitalize
-                    hover:bg-slate-300/20`,
+                    'cursor-pointer text-base capitalize hover:bg-muted',
                     isSelected && 'bg-accent',
                     option.disabled && 'cursor-not-allowed opacity-50'
                   )}
@@ -172,11 +171,10 @@ const CommandSelect = ({
   )
 }
 
-interface FormCommandProps
-  extends Omit<
-    ComponentProps<typeof CommandDialog>,
-    'commandValue' | 'onCommandValueChange' | 'children'
-  > {
+interface FormCommandProps extends Omit<
+  ComponentProps<typeof CommandDialog>,
+  'commandValue' | 'onCommandValueChange' | 'children'
+> {
   field: string
   label?: string
   description?: string

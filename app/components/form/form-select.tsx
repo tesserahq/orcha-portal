@@ -17,8 +17,10 @@ export interface SelectOption {
   disabled?: boolean
 }
 
-interface FormSelectProps
-  extends Omit<ComponentProps<typeof Select>, 'name' | 'value' | 'onValueChange'> {
+interface FormSelectProps extends Omit<
+  ComponentProps<typeof Select>,
+  'name' | 'value' | 'onValueChange'
+> {
   field: string
   label?: string
   description?: string

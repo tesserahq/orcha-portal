@@ -24,7 +24,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        `group/calendar bg-white p-3 [--cell-size:--spacing(8)] dark:bg-background
+        `group/calendar bg-background p-3 [--cell-size:--spacing(8)]
         in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent`,
         String.raw`[.rdp-button\_next>svg]:**:rtl:rotate-180`,
         String.raw`[.rdp-button\_previous>svg]:**:rtl:rotate-180`,
@@ -105,11 +105,10 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // eslint-disable-next-line react/prop-types
         Root: ({ className, rootRef, ...props }) => {
           return <div data-slot="calendar" ref={rootRef} className={cn(className)} {...props} />
         },
-        // eslint-disable-next-line react/prop-types
+
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === 'left') {
             return <ChevronLeftIcon className={cn('size-4', className)} {...props} />

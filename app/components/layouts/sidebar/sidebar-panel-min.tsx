@@ -16,7 +16,7 @@ export function SidebarPanelMin({ menuItems }: ISidebarPanelProps) {
 
   return (
     <div className="sidebar-panel-min">
-      <div className="flex h-full flex-col items-center bg-white dark:bg-sidebar-background">
+      <div className="flex h-full flex-col items-center bg-sidebar-background">
         {/* Sidebar Panel Min Body */}
         <div className="flex h-[calc(100%-4.5rem)] grow flex-col">
           <div className="is-scrollbar-hidden">
@@ -38,9 +38,7 @@ export function SidebarPanelMin({ menuItems }: ISidebarPanelProps) {
                     </TooltipProvider>
                   </li>
 
-                  {item.divider && (
-                    <hr className="my-2 border-t border-slate-200 dark:border-slate-700" />
-                  )}
+                  {item.divider && <hr className="my-2 border-t border-border" />}
                 </div>
               ))}
             </ul>
