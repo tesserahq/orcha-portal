@@ -1,7 +1,7 @@
 @reference "./root.css";
 
 .sidebar .sidebar-panel {
-  @apply border-r border-solid border-gray-200 dark:border-gray-700;
+  @apply border-r border-solid border-border;
 }
 
 .sidebar .sidebar-header {
@@ -13,7 +13,7 @@
 }
 
 .sidebar .sidebar-header .brand-name {
-  @apply text-lg font-semibold tracking-wider text-slate-800;
+  @apply text-foreground text-lg font-semibold tracking-wider;
 }
 
 .sidebar .sidebar-body {
@@ -30,23 +30,23 @@
 
 .sidebar .sidebar-nav li a:hover,
 .sidebar .sidebar-nav li a:focus {
-  @apply dark:bg-background bg-slate-50;
+  @apply bg-muted;
 }
 
 .sidebar .sidebar-nav li a.active,
 .sidebar .sidebar-nav li a:active,
 .sidebar .sidebar-nav li a.active:hover,
 .sidebar .sidebar-nav li a:active:hover {
-  @apply border-primary bg-accent text-primary dark:text-primary rounded-md hover:text-black dark:hover:text-slate-200;
+  @apply border-primary bg-sidebar-accent text-sidebar-accent-foreground rounded-md;
 }
 
 .sidebar-switcher {
-  @apply flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm tracking-wide text-slate-800 transition-all outline-none;
+  @apply flex w-full items-center justify-between rounded-lg px-3 py-2 text-foreground text-sm tracking-wide transition-all outline-none;
 }
 
-/* @apply bg-primary/10 dark:hover:bg-primary dark:hover:text-slate-800; */
+/* @apply bg-primary/10 dark:hover:bg-primary dark:hover:text-primary-foreground; */
 .sidebar-switcher:hover {
-  @apply bg-primary/10 dark:hover:bg-primary dark:hover:text-slate-800;
+  @apply bg-primary/10 dark:hover:bg-primary dark:hover:text-primary-foreground;
 }
 
 .sidebar-switcher:focus {

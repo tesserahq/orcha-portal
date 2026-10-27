@@ -32,7 +32,6 @@ export const fetchApi = async (
   node_env: NodeENVType,
   options: ApiOptions = {}
 ) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const headers: any = { 'Content-Type': 'application/json' }
 
   if (token) {

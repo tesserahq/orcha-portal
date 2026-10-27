@@ -979,9 +979,7 @@ const ReactFlowCanvasInner = (
   }, [workflow])
 
   return (
-    <div
-      className="relative flex min-h-0 h-full w-full flex-col overflow-hidden bg-stone-100
-        dark:bg-slate-900">
+    <div className="relative flex min-h-0 h-full w-full flex-col overflow-hidden bg-muted">
       <div
         className="absolute -top-1 left-0 z-1 flex w-full animate-slide-down items-center
           justify-between border-b bg-card py-3 pl-4 pr-8">
@@ -1010,12 +1008,11 @@ const ReactFlowCanvasInner = (
 
           {(workflow?.created_by || workflow?.created_at) && (
             <div
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500
-                dark:text-slate-400">
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               <WorkflowCreatedBy
                 creator={workflow?.created_by}
                 className="max-w-full"
-                textClassName="text-xs text-slate-500 dark:text-slate-400"
+                textClassName="text-xs text-muted-foreground"
                 showEmail={false}
               />
             </div>

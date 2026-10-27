@@ -15,7 +15,6 @@ import { INodeProperty } from '@/types/workflow'
 
 interface IEventTypeItemsProps {
   property: INodeProperty
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parameter: any
   onChange: (field: string, value: string) => void
   eventTypes?: string[]
@@ -92,7 +91,7 @@ export default function EventTypeItems({
                     <CommandItem
                       key={type}
                       value={type}
-                      className="cursor-pointer hover:bg-slate-300/20"
+                      className="cursor-pointer hover:bg-muted"
                       onSelect={() => {
                         onChange(property.name, type)
                         setPopoverOpen(false)
@@ -105,7 +104,7 @@ export default function EventTypeItems({
               {eventType.trim() && !doesEventTypeExist(eventType) && (
                 <CommandItem
                   value={eventType.trim()}
-                  className="cursor-pointer font-semibold hover:bg-slate-300/20"
+                  className="cursor-pointer font-semibold hover:bg-muted"
                   onSelect={() => {
                     const newEventType = eventType.trim()
                     setCombinedEventTypes((prev) => [...prev, newEventType])

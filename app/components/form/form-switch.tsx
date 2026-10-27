@@ -10,8 +10,10 @@ import {
 import { Switch } from '@shadcn/ui/switch'
 import { ComponentProps } from 'react'
 
-interface FormSwitchProps
-  extends Omit<ComponentProps<typeof Switch>, 'name' | 'checked' | 'onCheckedChange'> {
+interface FormSwitchProps extends Omit<
+  ComponentProps<typeof Switch>,
+  'name' | 'checked' | 'onCheckedChange'
+> {
   field: string
   label?: string
   description?: string

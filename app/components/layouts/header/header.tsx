@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ProfileMenu } from '@/components/profile-menu/profile-menu'
 import { Avatar, AvatarImage } from '@shadcn/ui/avatar'
 import Separator from '@shadcn/ui/separator'
@@ -64,12 +63,7 @@ export function Header({ isExpanded, setIsExpanded, action, withSidebar }: IHead
                 </Button>
               )}
 
-              {action && (
-                <Separator
-                  orientation="vertical"
-                  className="mr-1.5 h-3 bg-slate-400 dark:bg-slate-500"
-                />
-              )}
+              {action && <Separator orientation="vertical" className="mr-1.5 h-3 bg-border" />}
               {action}
             </div>
 

@@ -204,7 +204,7 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
               value={displayName}
               autoFocus
               className="mb-1 h-auto w-full border-none p-0 text-xl! font-semibold outline-hidden
-                focus-visible:bg-white"
+                focus-visible:bg-muted"
               onChange={(e) => {
                 setDisplayName(e.target.value)
                 if (nodeData?.node.id) {
@@ -277,15 +277,13 @@ const NodePropertyDrawer: React.ForwardRefRenderFunction<FuncProps, IProps> = (
             <div
               className="-mt-16 flex h-16 w-16 items-center justify-center rounded-full
                 bg-destructive p-3">
-              <Trash2 size={32} className="text-white" />
+              <Trash2 size={32} className="text-destructive-foreground" />
             </div>
             <DialogTitle className="hidden"></DialogTitle>
           </DialogHeader>
           <DialogDescription className="px-3" asChild>
             <div className="flex flex-col items-center">
-              <h1 className="text-3xl font-semibold text-black dark:text-secondary-foreground">
-                Delete Node
-              </h1>
+              <h1 className="text-3xl font-semibold text-foreground">Delete Node</h1>
               <p className="mb-3 mt-3 text-center text-base text-secondary-foreground">
                 Are you sure you want to delete &quot;{nodeData?.title}&quot;? This action cannot be
                 undone.
