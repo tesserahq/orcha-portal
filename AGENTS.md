@@ -23,7 +23,7 @@ bun run format:check
 bun run check                  # format && lint && typecheck — run this before considering work done
 ```
 
-There is no test suite/framework configured in this repo (no jest/vitest/playwright and no `test` script) — don't invent one or assume test commands exist.
+Tests use Node's built-in test runner with `tsx`: run `bun run test`. Keep `*.test.ts` files alongside the code they cover.
 
 `lefthook` runs `eslint --fix` and `prettier --write` on staged `*.{js,jsx,ts,tsx,json}` files as a pre-commit hook (auto-adds fixes).
 
