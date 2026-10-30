@@ -11,6 +11,9 @@ import {
   useNavigate,
 } from 'react-router'
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
+import { getLocale, i18nextMiddleware } from '@/modules/i18n/i18n.server'
+import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Import global CSS styles for the application
 // The ?url query parameter tells the bundler to handle this as a URL import
@@ -41,7 +44,7 @@ import { AuthProvider } from 'tessera-ui'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 library.add(fas as any)
 
-export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
+export const meta: MetaFunction<typeof loader> = ({ loaderData, location }) => {
   // Get the current page title from the pathname
   const getPageTitle = () => {
     const path = location.pathname
@@ -57,8 +60,11 @@ export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
 
   const pageTitle = getPageTitle()
 
-  return metaObject(data ? pageTitle : 'Error')
+  return metaObject(loaderData ? pageTitle : 'Error')
 }
+
+export const handle = { i18n: ['translation'] }
+export const middleware = [i18nextMiddleware]
 
 export const links: LinksFunction = () => {
   return [
@@ -71,7 +77,7 @@ export const links: LinksFunction = () => {
 
 export type LoaderData = Exclude<Awaited<ReturnType<typeof loader>>, Response>
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const user = null
 
   const { toast, headers: toastHeaders } = await getToastSession(request)
@@ -100,6 +106,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         path: new URL(request.url).pathname,
         userPrefs: { theme: getTheme(request) },
       },
+      locale: getLocale(context),
     } as const,
     {
       headers: combineHeaders(
@@ -113,17 +120,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 function Document({
   children,
   nonce,
+  lang = 'en',
   dir = 'ltr',
   theme = 'light',
 }: {
   children: React.ReactNode
   nonce: string
+  lang?: string
   dir?: 'ltr' | 'rtl'
   theme?: Theme
 }) {
   return (
     <html
-      lang="en"
+      lang={lang}
       dir={dir}
       className={`${theme} overflow-x-hidden`}
       style={{ colorScheme: theme }}>
@@ -150,18 +159,32 @@ function Document({
 }
 
 export default function AppWithProviders() {
-  const { toast, csrfToken, clientID, domain, audience, hostUrl, organizationID, identiesApiUrl } =
-    useLoaderData<typeof loader>()
+  const {
+    toast,
+    csrfToken,
+    clientID,
+    domain,
+    audience,
+    hostUrl,
+    organizationID,
+    identiesApiUrl,
+    locale,
+  } = useLoaderData<typeof loader>()
 
   const nonce = useNonce()
   const theme = useTheme()
   const navigate = useNavigate()
+  const { i18n } = useTranslation()
+
+  useEffect(() => {
+    if (locale) i18n.changeLanguage(locale).catch(() => {})
+  }, [i18n, locale])
 
   // Renders toast (if any).
   useToast(toast)
 
   return (
-    <Document nonce={nonce} theme={theme}>
+    <Document nonce={nonce} theme={theme} lang={locale ?? 'en'}>
       <ProgressBar />
       <AuthenticityTokenProvider token={csrfToken}>
         <AuthProvider
