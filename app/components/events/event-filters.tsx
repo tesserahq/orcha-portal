@@ -28,7 +28,7 @@ const DateFilter = ({ label, value, disabled, onChange }: DateFilterProps) => {
         <Button
           variant="outline"
           className={cn(
-            'w-44 justify-start text-left font-normal',
+            'w-44 shrink-0 justify-start text-left font-normal',
             !value && 'text-muted-foreground'
           )}>
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -64,13 +64,13 @@ export const EventFilters = ({
   hasActiveFilters,
 }: EventFiltersProps) => {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="mb-4 flex items-center gap-2">
       <Input
         value={eventType}
         onChange={(event) => onEventTypeChange(event.target.value)}
         placeholder="Event type, e.g. user.*"
         aria-label="Filter by event type"
-        className="w-64"
+        className="w-64 min-w-0 shrink"
       />
       <DateFilter
         label="Created from"
