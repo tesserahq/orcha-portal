@@ -8,14 +8,21 @@ import DeleteConfirmation, {
   type DeleteConfirmationHandle,
 } from '@/components/delete-confirmation/delete-confirmation'
 import { NodeENVType } from '@/libraries/fetch'
+import { EventFilters } from '@/components/events/event-filters'
 import { useDeleteEvent, useEvents } from '@/resources/hooks/events/use-events'
 import { EventType } from '@/resources/queries/events/event.type'
+import {
+  formatEventFilterDate,
+  parseEventFilterDate,
+  toEventFilterParams,
+  withEventFilterParams,
+} from '@/resources/queries/events/event.utils'
 import { ensureCanonicalPagination } from '@/utils/pagination.server'
-import { Link, useLoaderData, useNavigate } from 'react-router'
+import { Link, useLoaderData, useNavigate, useSearchParams } from 'react-router'
 import { LoaderFunctionArgs } from 'react-router'
 import type { LegacyColumnDef as ColumnDef } from '@tanstack/react-table/legacy'
 import { Ellipsis, EyeIcon, FileJson, Trash2 } from 'lucide-react'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DateTime, useApp } from 'tessera-ui'
 
 export function loader({ request }: LoaderFunctionArgs) {
@@ -50,7 +57,58 @@ export default function EventsIndex() {
     nodeEnv,
   }
 
-  const { data, isLoading, error } = useEvents(config, { page, size }, { enabled: !!token })
+  // Filters live in the URL so they survive reloads and back/forward navigation.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlEventType = searchParams.get('event_type') ?? ''
+  const createdFromParam = searchParams.get('created_from')
+  const createdToParam = searchParams.get('created_to')
+  const createdFrom = parseEventFilterDate(createdFromParam)
+  const createdTo = parseEventFilterDate(createdToParam)
+  const hasActiveFilters = Boolean(urlEventType || createdFromParam || createdToParam)
+
+  // The type input is local state so typing stays responsive; the URL is updated after a pause.
+  const [eventTypeInput, setEventTypeInput] = useState(urlEventType)
+
+  const updateFilters = useCallback(
+    (changes: Record<string, string | undefined>) => {
+      // Any filter change goes back to the first page.
+      setSearchParams((current) => withEventFilterParams(current, { ...changes, page: '1' }))
+    },
+    [setSearchParams]
+  )
+
+  useEffect(() => {
+    // Only pick up URL changes (e.g. clear or back navigation). Keep the typed text
+    // when it already matches the URL once trimmed, so a trailing space isn't dropped.
+    setEventTypeInput((current) => (current.trim() === urlEventType ? current : urlEventType))
+  }, [urlEventType])
+
+  useEffect(() => {
+    const nextValue = eventTypeInput.trim()
+    if (nextValue === urlEventType) return
+
+    const timeout = setTimeout(() => updateFilters({ event_type: nextValue }), 300)
+    return () => clearTimeout(timeout)
+  }, [eventTypeInput, urlEventType, updateFilters])
+
+  const handleCreatedFromChange = (date?: Date) => {
+    updateFilters({ created_from: date ? formatEventFilterDate(date) : undefined })
+  }
+
+  const handleCreatedToChange = (date?: Date) => {
+    updateFilters({ created_to: date ? formatEventFilterDate(date) : undefined })
+  }
+
+  const handleClearFilters = () => {
+    setEventTypeInput('')
+    updateFilters({ event_type: undefined, created_from: undefined, created_to: undefined })
+  }
+
+  const { data, isLoading, error } = useEvents(
+    config,
+    { page, size, ...toEventFilterParams(searchParams) },
+    { enabled: !!token }
+  )
 
   const { mutateAsync: deleteEvent } = useDeleteEvent(config, {
     onSuccess: () => {
@@ -185,10 +243,25 @@ export default function EventsIndex() {
         <h1 className="text-2xl font-semibold">Events</h1>
       </div>
 
+      <EventFilters
+        eventType={eventTypeInput}
+        onEventTypeChange={setEventTypeInput}
+        createdFrom={createdFrom}
+        createdTo={createdTo}
+        onCreatedFromChange={handleCreatedFromChange}
+        onCreatedToChange={handleCreatedToChange}
+        onClear={handleClearFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
+
       {!isLoading && data?.items?.length === 0 && (
         <EmptyContent
           title="No events found"
-          description="Events will appear here when they are created"
+          description={
+            hasActiveFilters
+              ? 'No events match the current filters'
+              : 'Events will appear here when they are created'
+          }
           image="/images/empty-sources.png"
         />
       )}
