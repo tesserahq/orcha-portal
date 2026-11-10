@@ -1,8 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IQueryConfig, IQueryParams } from '@/resources/queries'
-import { deleteEvent, getEvent, getEvents } from '@/resources/queries/events/event.queries'
+import { IQueryConfig } from '@/resources/queries'
+import {
+  deleteEvent,
+  EventListParams,
+  getEvent,
+  getEvents,
+} from '@/resources/queries/events/event.queries'
 import { EventType } from '@/resources/queries/events/event.type'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 /**
@@ -26,7 +31,7 @@ class QueryError extends Error {
 export const eventQueryKeys = {
   all: ['events'] as const,
   lists: () => [...eventQueryKeys.all, 'list'] as const,
-  list: (params: IQueryParams) => [...eventQueryKeys.lists(), params] as const,
+  list: (params: EventListParams) => [...eventQueryKeys.lists(), params] as const,
   details: () => [...eventQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...eventQueryKeys.details(), id] as const,
 }
@@ -36,7 +41,7 @@ export const eventQueryKeys = {
  */
 export function useEvents(
   config: IQueryConfig,
-  params: IQueryParams,
+  params: EventListParams,
   options?: {
     enabled?: boolean
     staleTime?: number
@@ -44,6 +49,9 @@ export function useEvents(
 ) {
   return useQuery({
     queryKey: eventQueryKeys.list(params),
+    // Keep the current list visible while a new filter or page loads, so the
+    // filter inputs stay mounted and keep focus.
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       try {
         if (!config.token) {
